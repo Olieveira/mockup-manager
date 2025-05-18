@@ -12,8 +12,8 @@ export function Scene() {
         shadows
         dpr={[1, 2]}
         camera={{ position: [260, 80, 20], fov: 70 }}
-        style={{ background: '#f0f0f0' }} // cor de fundo clara
-      >
+        style={{ background: '#f0d8d8' }}>
+
         <Suspense fallback={null}>
           <Environment preset="city" />
           {/* <ModeloMockup /> */}
@@ -26,6 +26,7 @@ export function Scene() {
             far={2.5}
           />
         </Suspense>
+        
         <OrbitControls
           autoRotate
           target={[0, 0, 0]}
@@ -36,7 +37,7 @@ export function Scene() {
           zoomSpeed={0.5}
           maxPolarAngle={Math.PI / 2}
         />
-      </Canvas>
+      </Canvas >
     </>
   )
 }

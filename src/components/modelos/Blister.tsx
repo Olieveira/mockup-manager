@@ -5,32 +5,54 @@ import {
   Mesh,
   MeshStandardMaterial,
   MeshPhysicalMaterial,
+  FrontSide,
 } from 'three'
 
-
 export function BlisterMockup() {
-  const { scene } = useGLTF('/card-sm.glb')
-  const texture = useTexture('/arte2.jpg')
+  const { scene } = useGLTF('/card-blister.glb')
+  const texture = useTexture('/flork.jpg')
+  const texture2 = useTexture('/flork2.jpg')
 
   useEffect(() => {
-    if (!texture) return
+    if (!texture || !texture2) return
     texture.center.set(0.5, 0.5)
-    texture.repeat.set(-1, 1)
+    texture.repeat.set(-1, -1)
     texture.needsUpdate = true
-  }, [texture])
+
+    texture2.center.set(0.5, 0.5)
+    texture2.repeat.set(1, -1)
+    texture2.needsUpdate = true
+
+
+  }, [texture, texture2])
 
   useEffect(() => {
     if (!scene) return
 
-    const blenderCard = scene.getObjectByName('Card') as Mesh
+    const cardFrente = scene.getObjectByName('CardFrente')
+    const cardVerso = scene.getObjectByName('CardVerso')
     const blenderBlister = scene.getObjectByName('Blister') as Mesh
 
-    if (blenderCard?.material instanceof MeshStandardMaterial) {
-      blenderCard.material.map = texture
-      blenderCard.material.needsUpdate = true
-      blenderCard.material.side = DoubleSide
-      blenderCard.material.transparent = true
-    }
+    if ((!cardFrente || !("children" in cardFrente)) ||
+      (!cardVerso || !("children" in cardVerso))) return
+
+    cardFrente.children.forEach((child) => {
+      if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
+        child.material.map = texture
+        child.material.needsUpdate = true
+        child.material.side = FrontSide
+        child.material.transparent = true
+      }
+    })
+
+    cardVerso.children.forEach((child) => {
+      if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
+        child.material.map = texture2
+        child.material.needsUpdate = true
+        child.material.side = FrontSide
+        child.material.transparent = true
+      }
+    })
 
     if (blenderBlister) {
       const blisterMaterial = new MeshPhysicalMaterial({
@@ -49,5 +71,9 @@ export function BlisterMockup() {
     }
   }, [scene, texture])
 
-  return <primitive object={scene} />
+  return (
+    <group scale={[950, 950, 950]}>
+      <primitive object={scene} />
+    </group>
+  )
 }
