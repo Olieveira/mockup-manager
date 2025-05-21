@@ -1,4 +1,4 @@
-import { Children, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useGLTF, useTexture } from '@react-three/drei'
 import {
   DoubleSide,
@@ -8,9 +8,22 @@ import {
   FrontSide,
 } from 'three'
 
-export function BlisterMockup() {
+interface BlisterProps {
+  arte: string | undefined;
+}
+
+export function BlisterMockup({ arte }: BlisterProps) {
+  const textureUrl = arte || "/flork.jpg"
+  const texture = useTexture(textureUrl)
   const { scene } = useGLTF('/card-blister-sm.glb')
-  const texture = useTexture('/flork.jpg')
+
+  useEffect(() => {
+    console.log("Arte recebida no blister:\n", arte)
+    if (!arte) return
+    return () => {
+      URL.revokeObjectURL(textureUrl)
+    }
+  }, [arte, textureUrl])
 
   useEffect(() => {
     if (!texture) return

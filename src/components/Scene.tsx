@@ -1,15 +1,16 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { BlisterMockup } from './modelos/Blister'
-import { ModeloMockup } from './ModeloMockup'
+import { CanecaMockup } from './modelos/Caneca'
 import { Suspense, useRef, useEffect, useMemo } from 'react'
 import { PerspectiveCamera } from 'three'
 
 interface SceneProps {
-  modelo: 'blister' | 'caneca'
+  modelo: 'blister' | 'caneca',
+  arte: string | undefined
 }
 
-export function Scene({ modelo }: SceneProps) {
+export function Scene({ modelo, arte }: SceneProps) {
   const cameraRef = useRef<PerspectiveCamera | null>(null);
 
   const cameraPosition: [number, number, number] = useMemo(() => {
@@ -23,19 +24,19 @@ export function Scene({ modelo }: SceneProps) {
     return [260, 80, 20] as [number, number, number]
   }, [])
 
-  useEffect(() => {
-    if (cameraRef.current) {
-      console.log('Camera position:', cameraRef.current.position.toArray());
-      console.log('Camera rotation:', cameraRef.current.rotation.toArray());
-    }
-  }, [modelo]);
+  // useEffect(() => {
+  //   if (cameraRef.current) {
+  //     console.log('Camera position:', cameraRef.current.position.toArray());
+  //     console.log('Camera rotation:', cameraRef.current.rotation.toArray());
+  //   }
+  // }, [modelo]);
 
   function renderModel(modelo: 'blister' | 'caneca') {
     if (modelo === 'caneca') {
-      return <ModeloMockup />
+      return <CanecaMockup arte={arte} />
     }
     if (modelo === 'blister') {
-      return <BlisterMockup />
+      return <BlisterMockup arte={arte} />
     }
     return null
   }
