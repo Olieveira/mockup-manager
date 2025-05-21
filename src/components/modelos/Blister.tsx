@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { Children, useEffect } from 'react'
 import { useGLTF, useTexture } from '@react-three/drei'
 import {
   DoubleSide,
@@ -9,29 +9,25 @@ import {
 } from 'three'
 
 export function BlisterMockup() {
-  const { scene } = useGLTF('/card-blister.glb')
+  const { scene } = useGLTF('/card-blister-sm.glb')
   const texture = useTexture('/flork.jpg')
-  const texture2 = useTexture('/flork2.jpg')
 
   useEffect(() => {
-    if (!texture || !texture2) return
+    if (!texture) return
     texture.center.set(0.5, 0.5)
-    texture.repeat.set(-1, -1)
+    texture.repeat.set(1, -1)
     texture.needsUpdate = true
-
-    texture2.center.set(0.5, 0.5)
-    texture2.repeat.set(1, -1)
-    texture2.needsUpdate = true
-
-
-  }, [texture, texture2])
+  }, [texture])
 
   useEffect(() => {
     if (!scene) return
 
+    console.log(scene)
+
     const cardFrente = scene.getObjectByName('CardFrente')
     const cardVerso = scene.getObjectByName('CardVerso')
     const blenderBlister = scene.getObjectByName('Blister') as Mesh
+    const blenderCircle = scene.getObjectByName('Círculo')
 
     if ((!cardFrente || !("children" in cardFrente)) ||
       (!cardVerso || !("children" in cardVerso))) return
@@ -47,28 +43,35 @@ export function BlisterMockup() {
 
     cardVerso.children.forEach((child) => {
       if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
-        child.material.map = texture2
+        child.material.map = texture
         child.material.needsUpdate = true
         child.material.side = FrontSide
         child.material.transparent = true
       }
     })
 
-    if (blenderBlister) {
-      const blisterMaterial = new MeshPhysicalMaterial({
-        color: 0xffffff,
-        transmission: 1,
-        opacity: 1,
-        roughness: 0.1,
-        metalness: 0,
-        ior: 1.45,
-        thickness: 0.05,
-        transparent: true,
-        side: DoubleSide
-      })
+    const blisterMaterial = new MeshPhysicalMaterial({
+      color: 0xffffff,
+      transmission: 0.8,
+      opacity: 1,
+      roughness: 0.1,
+      metalness: 0,
+      ior: 1.45,
+      thickness: 0,
+      transparent: true,
+      side: DoubleSide
+    })
 
-      blenderBlister.material = blisterMaterial
+    if (blenderCircle && ("children" in blenderCircle)) {
+      blenderCircle.children.forEach((child) => {
+        if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
+          child.material = blisterMaterial
+        }
+      })
     }
+
+    blenderBlister && (blenderBlister.material = blisterMaterial)
+
   }, [scene, texture])
 
   return (
