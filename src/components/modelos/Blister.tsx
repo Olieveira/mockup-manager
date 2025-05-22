@@ -68,9 +68,9 @@ export function BlisterMockup({ arte }: BlisterProps) {
       transmission: 0.8,
       opacity: 1,
       roughness: 0.1,
-      metalness: 0,
+      metalness: 0.25,
       ior: 1.45,
-      thickness: 0,
+      thickness: 0.5,
       transparent: true,
       side: DoubleSide
     })
