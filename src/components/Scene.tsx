@@ -7,10 +7,11 @@ import { PerspectiveCamera } from 'three'
 
 interface SceneProps {
   modelo: 'blister' | 'caneca',
-  arte: string | undefined
+  arte: string | undefined,
+  bgColor: string | undefined
 }
 
-export function Scene({ modelo, arte }: SceneProps) {
+export function Scene({ modelo, arte, bgColor }: SceneProps) {
   const cameraRef = useRef<PerspectiveCamera | null>(null);
 
   const cameraPosition: [number, number, number] = useMemo(() => {
@@ -47,7 +48,7 @@ export function Scene({ modelo, arte }: SceneProps) {
         shadows
         dpr={[1, 2]}
         camera={{ position: cameraPosition, fov: 80 }}
-        style={{ background: '#f0d8d8' }}
+        style={{ background: bgColor ? bgColor : '#f0d8d8' }}
         onCreated={({ camera }) => {
           cameraRef.current = camera as PerspectiveCamera;
         }}>
