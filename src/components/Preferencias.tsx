@@ -1,12 +1,13 @@
 import { PresetsType } from '@react-three/drei/helpers/environment-assets';
 import { AnimatePresence, motion } from 'framer-motion'
+import { FaArrowLeft, FaArrowRight } from 'react-icons/fa6'
 import { useEffect, useState } from 'react';
 
 interface PreferenciasProps {
     handleClose: () => void;
     handleChangeColor: (color: string) => void;
     handleChangePresetMode: (presetMode: boolean) => void;
-    handleChangePreset: (preset: string) => void;
+    handleChangePreset: (preset: PresetsType) => void;
     currentColor: string | undefined;
     currentBgMode: boolean,
     currentPreset: PresetsType
@@ -20,6 +21,41 @@ export function Preferencias({
     currentColor,
     currentBgMode,
     currentPreset }: PreferenciasProps) {
+
+    const [presetIndex, setPresetIndex] = useState<number>(0)
+
+    const presets: PresetsType[] = [
+        "apartment",
+        "city",
+        "dawn",
+        "forest",
+        "lobby",
+        "night",
+        "park",
+        "studio",
+        "sunset",
+        "warehouse"
+    ]
+    const presetLabels: Record<PresetsType, string> = {
+        apartment: "Apartamento",
+        city: "Cidade",
+        dawn: "Amanhecer",
+        forest: "Floresta",
+        lobby: "Lobby",
+        night: "Noite",
+        park: "Parque",
+        studio: "Estúdio",
+        sunset: "Pôr do Sol",
+        warehouse: "Armazém"
+    };
+
+    useEffect(() => {
+        setPresetIndex(presets.findIndex(p => p === currentPreset))
+    }, [])
+
+    useEffect(() => {
+        handleChangePreset(presets[presetIndex])
+    }, [presetIndex])
 
     return (
         <AnimatePresence>
@@ -52,16 +88,17 @@ export function Preferencias({
                             max={2}
                             step={0.01}
                             defaultValue={1}
-                            className="w-full accent-blue-600"
+                            className="w-full accent-blue-600 cursor-pointer"
                             aria-label="Intensidade da Luz"
                         />
                     </label>
 
                     <hr className="my-6 border-gray-700" />
 
-                    <div>
-                        <h3 className="text-lg font-semibold text-white mb-3">Cenário</h3>
-                        <div className="flex flex-col justify-center items-center gap-4">
+                    <h3 className="text-lg font-semibold text-white mb-3">Cenário</h3>
+
+                    <div className='flex flex-row justify-around'>
+                        <div className="flex flex-col justify-center gap-4">
                             <div className="flex flex-col gap-2 w-full">
                                 <label className="flex items-center gap-2 text-gray-200">
                                     <input
@@ -84,49 +121,69 @@ export function Preferencias({
                                     Cenário
                                 </label>
                             </div>
+                        </div>
 
-                            <AnimatePresence>
-                                {!currentBgMode && (
-                                    <motion.input
-                                        initial={{ opacity: 0, transition: { delay: 0.5, duration: 0.2, ease: "easeInOut" } }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        <AnimatePresence>
+                            {!currentBgMode && (
+                                <motion.div
+                                    initial={{ opacity: 0, transition: { delay: 0.5, duration: 0.2, ease: "easeInOut" } }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                    className='flex justify-center items-center'
+                                >
+                                    <input
                                         onChange={(e) => {
                                             handleChangeColor(e.target.value)
                                         }}
                                         value={currentColor}
                                         type="color"
                                         className="w-10 h-10 rounded-full bg-transparent cursor-pointer" />
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        <AnimatePresence>
-                            {currentBgMode && (
-                                <motion.div
-                                    initial={{ opacity: 0, transition: { delay: 0.5, duration: 0.2, ease: "easeInOut" } }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2, ease: "easeInOut" }}
-                                    className="grid grid-cols-2 gap-2 mt-5">
-
-                                    <div className="flex flex-col items-center">
-                                        <div className="w-20 h-12 rounded-lg bg-gradient-to-br from-blue-400 to-blue-900 border-2 border-blue-500 mb-1 flex items-center justify-center text-xs text-white font-bold">Cidade</div>
-                                    </div>
-                                    <div className="flex flex-col items-center">
-                                        <div className="w-20 h-12 rounded-lg bg-gradient-to-br from-green-300 to-green-700 border-2 border-green-500 mb-1 flex items-center justify-center text-xs text-white font-bold">Natureza</div>
-                                    </div>
-                                    <div className="flex flex-col items-center">
-                                        <div className="w-20 h-12 rounded-lg bg-gradient-to-br from-gray-400 to-gray-800 border-2 border-gray-500 mb-1 flex items-center justify-center text-xs text-white font-bold">Estúdio</div>
-                                    </div>
-                                    <div className="flex flex-col items-center">
-                                        <div className="w-20 h-12 rounded-lg bg-gradient-to-br from-yellow-200 to-yellow-600 border-2 border-yellow-400 mb-1 flex items-center justify-center text-xs text-gray-900 font-bold">Minimalista</div>
-                                    </div>
                                 </motion.div>
                             )}
+
+                            {/* Cenários */}
+                            <AnimatePresence mode="wait">
+                                {currentBgMode && presets.map((preset, i) =>
+                                    i === presetIndex ? (
+                                        <motion.div
+                                            key={preset}
+                                            className={`flex flex-col items-center gap-2`}
+                                        >
+                                            <motion.span
+                                                initial={{ opacity: 0, x: -30 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 30 }}
+                                                transition={{ duration: 0.4, ease: 'easeInOut' }}
+                                                className="text-white text-lg font-medium text-center min-w-28"
+                                            >
+                                                {presetLabels[preset]}
+                                            </motion.span>
+                                            <div className="flex gap-2 mt-2">
+                                                <button
+                                                    className="px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50"
+                                                    onClick={() => setPresetIndex((prev) => prev > 0 ? prev - 1 : presets.length - 1)}
+                                                    disabled={presets.length <= 1}
+                                                    aria-label="Preset anterior"
+                                                >
+                                                    <FaArrowLeft className="w-5 h-5 text-blue-400 transition-colors" />
+                                                </button>
+                                                <button
+                                                    className="px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50"
+                                                    onClick={() => setPresetIndex((prev) => prev < presets.length - 1 ? prev + 1 : 0)}
+                                                    disabled={presets.length <= 1}
+                                                    aria-label="Próximo preset"
+                                                >
+                                                    <FaArrowRight className="w-5 h-5 text-blue-400 transition-colors" />
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    ) : null
+                                )}
+                            </AnimatePresence>
                         </AnimatePresence>
                     </div>
+
                     <button
                         className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
                         onClick={handleClose}

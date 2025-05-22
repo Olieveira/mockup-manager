@@ -16,18 +16,7 @@ function App() {
   const [preferencesView, setPreferencesView] = useState<boolean>(false)
   const [bgPresetMode, setBgPresetMode] = useState<boolean>(false)
   const [bgPreset, setBgPreset] = useState<PresetsType>("city")
-  const presets: PresetsType[] = [
-    "apartment",
-    "city",
-    "dawn",
-    "forest",
-    "lobby",
-    "night",
-    "park",
-    "studio",
-    "sunset",
-    "warehouse"
-  ]
+
 
   useEffect(() => {
     if (selectedFile) {
@@ -158,7 +147,7 @@ function App() {
             handleClose={() => setPreferencesView(false)}
             handleChangeColor={(color: string) => { setBgScene(color) }}
             handleChangePresetMode={(presetMode) => { setBgPresetMode(presetMode) }}
-            handleChangePreset={(preset) => { setBgScene(preset) }}
+            handleChangePreset={(preset) => { setBgPreset(preset) }}
             currentColor={bgScene ? bgScene : "#ffffff"}
             currentBgMode={bgPresetMode}
             currentPreset={bgPreset}
