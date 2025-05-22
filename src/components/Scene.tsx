@@ -5,14 +5,17 @@ import { CanecaMockup } from './modelos/Caneca'
 import { Suspense, useRef, useEffect, useMemo } from 'react'
 import { PerspectiveCamera } from 'three'
 import { BgDinamico } from './BgDinamico'
+import type { PresetsType } from '@react-three/drei/helpers/environment-assets'
 
 interface SceneProps {
   modelo: 'blister' | 'caneca',
   arte: string | undefined,
-  bgColor: string | undefined
+  bgColor: string | undefined,
+  bgPresetMode: boolean,
+  bgPreset: PresetsType
 }
 
-export function Scene({ modelo, arte, bgColor }: SceneProps) {
+export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset }: SceneProps) {
   const cameraRef = useRef<PerspectiveCamera | null>(null);
 
   const cameraPosition: [number, number, number] = useMemo(() => {
@@ -63,7 +66,7 @@ export function Scene({ modelo, arte, bgColor }: SceneProps) {
         <BgDinamico color={bgColor || '#fff'} />
 
         <Suspense fallback={null}>
-          <Environment preset="city" background={false} />
+          <Environment preset={bgPreset ? bgPreset : "city"} background={bgPresetMode} />
 
           {renderModel(modelo)}
 

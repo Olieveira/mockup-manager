@@ -5,6 +5,7 @@ import { Nav } from './components/Nav'
 import { FaFileCirclePlus, FaArrowsRotate, FaArrowLeft, FaArrowRight, FaGear, FaDownload } from "react-icons/fa6"
 import { motion, AnimatePresence } from 'framer-motion'
 import { Preferencias } from './components/Preferencias'
+import { PresetsType } from '@react-three/drei/helpers/environment-assets'
 
 
 function App() {
@@ -13,6 +14,20 @@ function App() {
   const [arteUrl, setArteUrl] = useState<string | undefined>(undefined)
   const [bgScene, setBgScene] = useState<string | undefined>(undefined)
   const [preferencesView, setPreferencesView] = useState<boolean>(false)
+  const [bgPresetMode, setBgPresetMode] = useState<boolean>(false)
+  const [bgPreset, setBgPreset] = useState<PresetsType>("city")
+  const presets: PresetsType[] = [
+    "apartment",
+    "city",
+    "dawn",
+    "forest",
+    "lobby",
+    "night",
+    "park",
+    "studio",
+    "sunset",
+    "warehouse"
+  ]
 
   useEffect(() => {
     if (selectedFile) {
@@ -49,7 +64,7 @@ function App() {
         return;
       }
       const dataUrl = canvas.toDataURL('image/png');
-      
+
       // Link para download
       const link = document.createElement('a');
       link.href = dataUrl;
@@ -78,7 +93,12 @@ function App() {
                 className="text-white text-xl" />
             </motion.div>
 
-            <Scene modelo={models} arte={arteUrl} bgColor={bgScene} />
+            <Scene modelo={models}
+              arte={arteUrl}
+              bgColor={bgScene}
+              bgPresetMode={bgPresetMode}
+              bgPreset={bgPreset}
+            />
 
             <motion.div
               className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 bg-gray-800/70 rounded-full cursor-pointer hover:bg-gray-700 transition"
@@ -137,7 +157,11 @@ function App() {
           <Preferencias
             handleClose={() => setPreferencesView(false)}
             handleChangeColor={(color: string) => { setBgScene(color) }}
-            currentColor={bgScene}
+            handleChangePresetMode={(presetMode) => { setBgPresetMode(presetMode) }}
+            handleChangePreset={(preset) => { setBgScene(preset) }}
+            currentColor={bgScene ? bgScene : "#ffffff"}
+            currentBgMode={bgPresetMode}
+            currentPreset={bgPreset}
           />
         )}
       </AnimatePresence>
