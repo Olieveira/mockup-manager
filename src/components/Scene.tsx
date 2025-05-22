@@ -4,6 +4,7 @@ import { BlisterMockup } from './modelos/Blister'
 import { CanecaMockup } from './modelos/Caneca'
 import { Suspense, useRef, useEffect, useMemo } from 'react'
 import { PerspectiveCamera } from 'three'
+import { BgDinamico } from './BgDinamico'
 
 interface SceneProps {
   modelo: 'blister' | 'caneca',
@@ -46,15 +47,23 @@ export function Scene({ modelo, arte, bgColor }: SceneProps) {
     <>
       <Canvas
         shadows
+        gl={{
+          preserveDrawingBuffer: true,
+          alpha: false // fundo opaco
+        }}
         dpr={[1, 2]}
         camera={{ position: cameraPosition, fov: 80 }}
+        onCreated={({ gl, camera }) => {
+          gl.setClearColor(bgColor ? bgColor : '#f0d8d8')
+          cameraRef.current = camera as PerspectiveCamera
+        }}
         style={{ background: bgColor ? bgColor : '#f0d8d8' }}
-        onCreated={({ camera }) => {
-          cameraRef.current = camera as PerspectiveCamera;
-        }}>
+      >
+
+        <BgDinamico color={bgColor || '#fff'} />
 
         <Suspense fallback={null}>
-          <Environment preset="city" />
+          <Environment preset="city" background={false} />
 
           {renderModel(modelo)}
 

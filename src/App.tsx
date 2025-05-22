@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Scene } from './components/Scene'
 import Header from './components/Header'
 import { Nav } from './components/Nav'
-import { FaFileCirclePlus, FaArrowsRotate, FaArrowLeft, FaArrowRight, FaGear } from "react-icons/fa6"
+import { FaFileCirclePlus, FaArrowsRotate, FaArrowLeft, FaArrowRight, FaGear, FaDownload } from "react-icons/fa6"
 import { motion, AnimatePresence } from 'framer-motion'
 import { Preferencias } from './components/Preferencias'
 
@@ -13,10 +13,6 @@ function App() {
   const [arteUrl, setArteUrl] = useState<string | undefined>(undefined)
   const [bgScene, setBgScene] = useState<string | undefined>(undefined)
   const [preferencesView, setPreferencesView] = useState<boolean>(false)
-
-  useEffect(() => {
-    console.log("Cor do fundo da cena alterado\n:", bgScene)
-  }, [bgScene])
 
   useEffect(() => {
     if (selectedFile) {
@@ -30,6 +26,7 @@ function App() {
     }
   }, [selectedFile])
 
+  // download da cena
   function handleNewMockup() {
     const input = document.createElement('input')
     input.type = 'file'
@@ -41,6 +38,26 @@ function App() {
       }
     }
     input.click()
+  }
+
+  function handleExport() {
+    // Aguarda o render do Three.js antes de capturar
+    setTimeout(() => {
+      const canvas = document.querySelector('.bg-gray-950 canvas') as HTMLCanvasElement | null;
+      if (!canvas) {
+        alert('Não foi possível encontrar a visualização para exportar.');
+        return;
+      }
+      const dataUrl = canvas.toDataURL('image/png');
+      
+      // Link para download
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = 'mockup.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }, 100);
   }
 
   return (
@@ -102,6 +119,15 @@ function App() {
               >
                 <FaArrowsRotate color='#fff' />
               </motion.div>
+              <motion.div
+                onClick={handleExport}
+                className='w-10 h-10 bg-gray-800 rounded-full cursor-pointer hover:bg-gray-700 transition-all flex justify-center items-center'
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.1 }}
+              >
+                <FaDownload color='#fff' />
+              </motion.div>
             </motion.div>
           </div>
         </section>
@@ -111,6 +137,7 @@ function App() {
           <Preferencias
             handleClose={() => setPreferencesView(false)}
             handleChangeColor={(color: string) => { setBgScene(color) }}
+            currentColor={bgScene}
           />
         )}
       </AnimatePresence>

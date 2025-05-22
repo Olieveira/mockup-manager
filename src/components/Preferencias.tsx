@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion'
+import { useState } from 'react';
 
 interface PreferenciasProps {
     handleClose: () => void;
     handleChangeColor: (color: string) => void;
+    currentColor: string | undefined;
 }
 
-export function Preferencias({ handleClose, handleChangeColor }: PreferenciasProps) {
+export function Preferencias({ handleClose, handleChangeColor, currentColor }: PreferenciasProps) {
     return (
         <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
@@ -31,7 +33,13 @@ export function Preferencias({ handleClose, handleChangeColor }: PreferenciasPro
                 <div className="flex flex-col gap-4">
                     <label className="flex flex-col gap-1 text-gray-200">
                         Cor de fundo
-                        <input onChange={(e) => { handleChangeColor(e.target.value) }} type="color" className="w-12 h-8 rounded border-none bg-transparent" />
+                        <input
+                            onChange={(e) => {
+                                handleChangeColor(e.target.value)
+                            }}
+                            value={currentColor}
+                            type="color"
+                            className="w-12 h-8 rounded border-none bg-transparent" />
                     </label>
                 </div>
                 <label className="flex flex-col gap-1 text-gray-200">
