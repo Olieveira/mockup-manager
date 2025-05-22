@@ -5,25 +5,22 @@ export function Nav() {
             <hr className="w-3/4 border-gray-700 mb-6" />
             <ul className="flex sm:flex-col flex-row gap-2 w-full px-4">
                 <li>
-                    <a
-                        href="/"
-                        className="block py-2 px-3 rounded-md text-gray-200 hover:bg-gray-800 hover:text-white transition font-medium"
-                    >
-                        Modelos
-                    </a>
-                </li>
-                <li>
-                    <div className="flex flex-col gap-1 w-full">
-                        <span className="text-gray-400 text-xs self-center uppercase tracking-wider px-3 mt-4 mb-2">Mockup's</span>
+                    <div className="flex sm:flex-col flex-row sm:items-center gap-2 w-full">
                         <a
                             href="/"
-                            className="block py-2 px-3 rounded-md text-gray-200 hover:bg-gray-800 hover:text-white transition font-medium"
+                            className="block py-2 px-3 rounded-md text-gray-200 hover:bg-gray-800 hover:text-white transition font-medium text-center"
+                        >
+                            Modelos
+                        </a>
+                        <a
+                            href="/"
+                            className="block py-2 px-3 rounded-md text-gray-200 hover:bg-gray-800 hover:text-white transition font-medium text-center"
                         >
                             Novo Mockup
                         </a>
                         <a
                             href="/"
-                            className="block py-2 px-3 rounded-md text-gray-200 hover:bg-gray-800 hover:text-white transition font-medium"
+                            className="block py-2 px-3 rounded-md text-gray-200 hover:bg-gray-800 hover:text-white transition font-medium text-center"
                         >
                             Galeria
                         </a>
