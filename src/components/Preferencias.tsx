@@ -8,9 +8,13 @@ interface PreferenciasProps {
     handleChangeColor: (color: string) => void;
     handleChangePresetMode: (presetMode: boolean) => void;
     handleChangePreset: (preset: PresetsType) => void;
+    handleChangeAutoRotate: (rotate: boolean) => void;
+    handleChangeRotateSpeed: (rotateSpeed: number) => void;
     currentColor: string | undefined;
     currentBgMode: boolean,
-    currentPreset: PresetsType
+    currentPreset: PresetsType,
+    currentRotate: boolean,
+    currentSpeed: number
 }
 
 export function Preferencias({
@@ -18,9 +22,13 @@ export function Preferencias({
     handleChangeColor,
     handleChangePresetMode,
     handleChangePreset,
+    handleChangeAutoRotate,
+    handleChangeRotateSpeed,
     currentColor,
     currentBgMode,
-    currentPreset }: PreferenciasProps) {
+    currentPreset,
+    currentSpeed,
+    currentRotate }: PreferenciasProps) {
 
     const [presetIndex, setPresetIndex] = useState<number>(0)
 
@@ -58,7 +66,6 @@ export function Preferencias({
     }, [presetIndex])
 
     return (
-        <AnimatePresence>
             <motion.div
                 className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
                 initial={{ opacity: 0 }}
@@ -80,6 +87,37 @@ export function Preferencias({
                         ×
                     </button>
                     <h2 className="text-2xl font-bold text-white mb-2">Preferências do Mockup</h2>
+
+                    <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
+                            <label className="text-gray-200">Rotação automática</label>
+                            <button
+                                type="button"
+                                className={`relative inline-flex items-center h-6 rounded-full w-12 transition-colors focus:outline-none ${currentRotate ? 'bg-blue-600' : 'bg-gray-600'}`}
+                                onClick={() => handleChangeAutoRotate(!currentRotate)}
+                                aria-label="Alternar rotação automática"
+                            >
+                                <span
+                                    className={`inline-block w-6 h-6 transform bg-white rounded-full shadow transition-transform ${currentRotate ? 'translate-x-6' : 'translate-x-0'}`}
+                                />
+                            </button>
+                        </div>
+                        <label className="flex flex-col gap-1 text-gray-200">
+                            Velocidade de rotação
+                            <input
+                                type="range"
+                                min={1}
+                                max={15}
+                                defaultValue={currentSpeed}
+                                step={0.05}
+                                className={`w-full accent-blue-600 cursor-pointer ${!currentRotate ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                aria-label="Velocidade da rotação"
+                                onChange={(e) => { handleChangeRotateSpeed(parseInt(e.target.value)) }}
+                                disabled={!currentRotate}
+                            />
+                        </label>
+                    </div>
+                    <hr className="my-6 border-gray-700" />
                     <label className="flex flex-col gap-1 text-gray-200">
                         Intensidade da Luz
                         <input
@@ -147,8 +185,12 @@ export function Preferencias({
                                 {currentBgMode && presets.map((preset, i) =>
                                     i === presetIndex ? (
                                         <motion.div
-                                            key={preset}
+                                            key={preset + '-' + i}
                                             className={`flex flex-col items-center gap-2`}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            transition={{ duration: 0.2 }}
                                         >
                                             <motion.span
                                                 initial={{ opacity: 0, x: -30 }}
@@ -192,6 +234,5 @@ export function Preferencias({
                     </button>
                 </motion.div>
             </motion.div>
-        </AnimatePresence>
     )
 }

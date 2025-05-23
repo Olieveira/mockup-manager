@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Scene } from './components/Scene'
 import Header from './components/Header'
 import { Nav } from './components/Nav'
-import { FaFileCirclePlus, FaArrowsRotate, FaArrowLeft, FaArrowRight, FaGear, FaDownload } from "react-icons/fa6"
+import { FaFileCirclePlus, FaArrowsRotate, FaArrowLeft, FaArrowRight, FaGear, FaDownload, FaRotate, FaCircleStop } from "react-icons/fa6"
 import { motion, AnimatePresence } from 'framer-motion'
 import { Preferencias } from './components/Preferencias'
 import { PresetsType } from '@react-three/drei/helpers/environment-assets'
@@ -16,6 +16,8 @@ function App() {
   const [preferencesView, setPreferencesView] = useState<boolean>(false)
   const [bgPresetMode, setBgPresetMode] = useState<boolean>(false)
   const [bgPreset, setBgPreset] = useState<PresetsType>("city")
+  const [autoRotate, setAutoRotate] = useState<boolean>(true)
+  const [rotateSpeed, setRotateSpeed] = useState<number>(3)
 
 
   useEffect(() => {
@@ -82,11 +84,23 @@ function App() {
                 className="text-white text-xl" />
             </motion.div>
 
+            <motion.div
+              className="absolute top-3 left-3 z-20 w-10 h-10 bg-gray-800/80 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-700 transition"
+              title="Ativar/desativar rotação automática"
+              onClick={() => setAutoRotate((prev) => !prev)}
+            >
+              {autoRotate ? <FaCircleStop className="text-white text-xl" /> : <FaRotate className="text-white text-xl" />}
+
+
+            </motion.div>
+
             <Scene modelo={models}
               arte={arteUrl}
               bgColor={bgScene}
               bgPresetMode={bgPresetMode}
               bgPreset={bgPreset}
+              autoRotate={autoRotate}
+              rotateSpeed={rotateSpeed}
             />
 
             <motion.div
@@ -148,9 +162,13 @@ function App() {
             handleChangeColor={(color: string) => { setBgScene(color) }}
             handleChangePresetMode={(presetMode) => { setBgPresetMode(presetMode) }}
             handleChangePreset={(preset) => { setBgPreset(preset) }}
+            handleChangeAutoRotate={(rotate) => { setAutoRotate(rotate) }}
+            handleChangeRotateSpeed={(speed) => { setRotateSpeed(speed) }}
             currentColor={bgScene ? bgScene : "#ffffff"}
             currentBgMode={bgPresetMode}
             currentPreset={bgPreset}
+            currentSpeed={rotateSpeed}
+            currentRotate={autoRotate}
           />
         )}
       </AnimatePresence>
