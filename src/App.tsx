@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { Scene } from './components/Scene'
 import Header from './components/Header'
 import { Nav } from './components/Nav'
-import { FaFileCirclePlus, FaArrowsRotate, FaArrowLeft, FaArrowRight, FaGear, FaDownload, FaRotate, FaCircleStop } from "react-icons/fa6"
+import {
+  FaFileCirclePlus, FaArrowsRotate, FaArrowLeft, FaArrowRight, FaGear, FaDownload, FaRotate,
+  FaCircleStop, FaEye, FaEyeSlash
+} from "react-icons/fa6"
 import { motion, AnimatePresence } from 'framer-motion'
 import { Preferencias } from './components/Preferencias'
 import { PresetsType } from '@react-three/drei/helpers/environment-assets'
+import { InfoPopOver } from './components/InfoPopOver'
 
 
 function App() {
@@ -18,6 +22,7 @@ function App() {
   const [bgPreset, setBgPreset] = useState<PresetsType>("city")
   const [autoRotate, setAutoRotate] = useState<boolean>(true)
   const [rotateSpeed, setRotateSpeed] = useState<number>(3)
+  const [showInfo, setShowInfo] = useState<boolean>(false)
 
 
   useEffect(() => {
@@ -74,7 +79,16 @@ function App() {
         <section className="flex-1 flex items-center justify-center p-2">
           <div className="relative w-full h-full bg-gray-950 rounded-lg shadow-lg flex items-center justify-center
             sm:aspect-video aspect-[16/24] sm:max-w-5xl max-w-full sm:max-h-none max-h-[80vh]">
-
+            <motion.div
+              onClick={() => { setShowInfo((prev) => !prev) }}
+              className="absolute bottom-2 left-2 z-30 w-10 h-10 bg-gray-800/80 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-700 transition"
+              title="Mostrar/ocultar labels dos ícones"
+            >
+              {showInfo ? <FaEyeSlash className="text-white text-xl" /> : <FaEye className="text-white text-xl" />}
+              <InfoPopOver show={showInfo} direction="top">
+                Mostrar/ocultar dicas dos botões
+              </InfoPopOver>
+            </motion.div>
             <motion.div
               className="absolute top-3 right-3 z-20 w-10 h-10 bg-gray-800/80 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-700 transition"
               title="Preferências do Mockup"
@@ -82,6 +96,9 @@ function App() {
               <FaGear
                 onClick={() => { setPreferencesView(true) }}
                 className="text-white text-xl" />
+              <InfoPopOver show={showInfo} direction="left">
+                Preferências do mockup
+              </InfoPopOver>
             </motion.div>
 
             <motion.div
@@ -90,8 +107,9 @@ function App() {
               onClick={() => setAutoRotate((prev) => !prev)}
             >
               {autoRotate ? <FaCircleStop className="text-white text-xl" /> : <FaRotate className="text-white text-xl" />}
-
-
+              <InfoPopOver show={showInfo} direction="right">
+                {autoRotate ? 'Desativar rotação automática' : 'Ativar rotação automática'}
+              </InfoPopOver>
             </motion.div>
 
             <Scene modelo={models}
@@ -103,12 +121,17 @@ function App() {
               rotateSpeed={rotateSpeed}
             />
 
+
+
             <motion.div
               className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 bg-gray-800/70 rounded-full cursor-pointer hover:bg-gray-700 transition"
               onClick={() => setModels(models === 'blister' ? 'caneca' : 'blister')}
               aria-label="Anterior"
             >
               <FaArrowLeft className="text-white text-2xl select-none" />
+              <InfoPopOver show={showInfo} direction="right">
+                Mockup anterior
+              </InfoPopOver>
             </motion.div>
             <motion.div
               className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 bg-gray-800/70 rounded-full cursor-pointer hover:bg-gray-700 transition"
@@ -116,42 +139,98 @@ function App() {
               aria-label="Próximo"
             >
               <FaArrowRight className="text-white text-2xl select-none" />
+              <InfoPopOver show={showInfo} direction="left">
+                Próximo mockup
+              </InfoPopOver>
             </motion.div>
 
-            <motion.div
+            <div
               className='absolute bottom-2 flex flex-row items-center justify-center gap-3'
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
             >
               <motion.div
                 onClick={handleNewMockup}
-                className='w-10 h-10 bg-gray-800 rounded-full cursor-pointer hover:bg-gray-700 transition-all flex justify-center items-center'
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.1 }}
+                className={`p-1.5 min-w-10 min-h-10 bg-gray-800 rounded-full cursor-pointer hover:bg-gray-700 transition-all flex flex-col justify-center items-center overflow-hidden`}
+                animate={{
+                  height: showInfo ? 50 : 30,
+                  width: showInfo ? (showInfo && window.innerWidth < 640 ? 80 : 160) : 40,
+                  minWidth: showInfo ? (window.innerWidth < 640 ? 80 : 160) : 40,
+                  transition: { ease: 'easeInOut', duration: 0.2 }
+                }}
               >
-                <FaFileCirclePlus color='#fff' size={'1.2rem'} />
+                <AnimatePresence>
+                  {showInfo && (
+                    <motion.span
+                      initial={{ opacity: 0, y: -30, scaleX: 0, transition: { delay: 0.3 } }}
+                      animate={{ opacity: 1, y: 0, scaleX: 1 }}
+                      exit={{ opacity: 0, y: -30, scaleX: 0, transition: { duration: 0.2 } }}
+                      transition={{ duration: 0.5, ease: 'easeInOut' }}
+                      className='text-xs text-white p-1 text-center text-wrap'>
+                      Trocar arte
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+
+                {!showInfo && (
+                  <FaFileCirclePlus color='#fff' size={'1.2rem'} className='relative' />
+                )}
+
               </motion.div>
+
               <motion.div
+                animate={{
+                  height: showInfo ? 50 : 30,
+                  width: showInfo ? (showInfo && window.innerWidth < 640 ? 80 : 160) : 40,
+                  minWidth: showInfo ? (window.innerWidth < 640 ? 80 : 160) : 40,
+                  transition: { ease: 'easeInOut', duration: 0.2 }
+                }}
                 onClick={() => { setSelectedFile(undefined) }}
-                className='w-10 h-10 bg-gray-800 rounded-full cursor-pointer hover:bg-gray-700 transition-all flex justify-center items-center'
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.1 }}
+                className={`p-1.5 min-w-10 min-h-10 bg-gray-800 rounded-full cursor-pointer hover:bg-gray-700 transition-all flex flex-col justify-center items-center`}
+                transition={{ duration: 0.8 }}
               >
-                <FaArrowsRotate color='#fff' />
+                {showInfo && (
+                  <motion.span
+                    initial={{ opacity: 0, y: -30, scaleX: 0, transition: { delay: 0.3 } }}
+                    animate={{ opacity: 1, y: 0, scaleX: 1 }}
+                    exit={{ opacity: 0, y: -30, scaleX: 0, transition: { duration: 0.2 } }}
+                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                    className='text-xs text-white p-1 text-center text-wrap'>
+                    Redefinir
+                  </motion.span>
+                )}
+
+                {!showInfo && (
+                  <FaArrowsRotate color='#fff' />
+                )}
+
               </motion.div>
+
               <motion.div
+                animate={{
+                  height: showInfo ? 50 : 30,
+                  width: showInfo ? (showInfo && window.innerWidth < 640 ? 80 : 160) : 40,
+                  minWidth: showInfo ? (window.innerWidth < 640 ? 80 : 160) : 40,
+                  transition: { ease: 'easeInOut', duration: 0.2 }
+                }}
                 onClick={handleExport}
-                className='w-10 h-10 bg-gray-800 rounded-full cursor-pointer hover:bg-gray-700 transition-all flex justify-center items-center'
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.1 }}
+                className={`p-1.5 min-w-10 min-h-10 bg-gray-800 rounded-full cursor-pointer hover:bg-gray-700 transition-all flex flex-col justify-center items-center`}
+                transition={{ duration: 0.8 }}
               >
-                <FaDownload color='#fff' />
+                {showInfo && (
+                  <motion.span
+                    initial={{ opacity: 0, y: -30, scaleX: 0, transition: { delay: 0.3 } }}
+                    animate={{ opacity: 1, y: 0, scaleX: 1 }}
+                    exit={{ opacity: 0, y: -30, scaleX: 0, transition: { duration: 0.2 } }}
+                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                    className='text-xs text-white p-1 text-center text-wrap'>
+                    Exportar
+                  </motion.span>
+                )}
+                {!showInfo && (
+                  <FaDownload color='#fff' />
+                )}
               </motion.div>
-            </motion.div>
+
+            </div>
           </div>
         </section>
       </main>

@@ -184,13 +184,9 @@ export function Preferencias({
                             <AnimatePresence mode="wait">
                                 {currentBgMode && presets.map((preset, i) =>
                                     i === presetIndex ? (
-                                        <motion.div
+                                        <div
                                             key={preset + '-' + i}
                                             className={`flex flex-col items-center gap-2`}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 10 }}
-                                            transition={{ duration: 0.2 }}
                                         >
                                             <motion.span
                                                 initial={{ opacity: 0, x: -30 }}
@@ -219,7 +215,7 @@ export function Preferencias({
                                                     <FaArrowRight className="w-5 h-5 text-blue-400 transition-colors" />
                                                 </button>
                                             </div>
-                                        </motion.div>
+                                        </div>
                                     ) : null
                                 )}
                             </AnimatePresence>
