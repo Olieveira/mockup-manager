@@ -40,8 +40,8 @@
 1. Clone o repositório:
 
    ```bash
-   git clone https://github.com/seu-usuario/mockup-viewer.git
-   cd mockup-viewer
+   git clone https://github.com/seu-usuario/mockup-manager.git
+   cd mockup-manager
    ```
 
 2. Instale as dependências:

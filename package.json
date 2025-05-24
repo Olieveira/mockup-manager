@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -29,9 +28,14 @@
     "typescript": "^5.0.0",
     "vite": "^5.0.0"
   },
-  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
-  "main": "eslint.config.js",
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "description": "Visualizador de mockups 3D com exportação e personalização online",
+  "keywords": [
+    "mockup",
+    "3D",
+    "viewer",
+    "react",
+    "vite"
+  ],
+  "author": "Nathan Melo",
+  "license": "CC-BY-NC-4.0"
 }
