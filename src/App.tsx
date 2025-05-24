@@ -24,6 +24,11 @@ function App() {
   const [showInfo, setShowInfo] = useState<boolean>(false)
 
   useEffect(() => {
+    window.addEventListener('dragover', (e) => e.preventDefault())
+    window.addEventListener('drop', (e) => e.preventDefault())
+  }, [])
+
+  useEffect(() => {
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile)
       setArteUrl(url)
@@ -77,7 +82,7 @@ function App() {
     <div className="min-h-screen min-w-screen flex flex-col bg-gradient-to-br from-gray-800 to-slate-950">
       <Header />
       <main className="flex flex-1 flex-col sm:flex-row">
-        <Nav />
+        {/* WIP <Nav /> */}
         <section className="flex-1 flex items-center justify-center p-2">
           <div className="relative w-full h-full bg-gray-950 rounded-lg shadow-lg flex items-center justify-center
             sm:aspect-video aspect-[16/24] sm:max-w-5xl max-w-full sm:max-h-none max-h-[80vh]">

@@ -1,7 +1,7 @@
 {
-  "name": "mockupviewernovo",
+  "name": "mockup-viewer",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-three/drei": "^9.56.0",
     "@react-three/fiber": "^8.18.0",
+    "framer-motion": "^12.12.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
