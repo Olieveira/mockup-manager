@@ -11,19 +11,17 @@ import { Preferencias } from './components/Preferencias'
 import { PresetsType } from '@react-three/drei/helpers/environment-assets'
 import { InfoPopOver } from './components/InfoPopOver'
 
-
 function App() {
-  const [models, setModels] = useState<'blister' | 'caneca'>('caneca')
+  const [models, setModels] = useState<'blister' | 'caneca'>('blister')
   const [selectedFile, setSelectedFile] = useState<File | undefined>()
   const [arteUrl, setArteUrl] = useState<string | undefined>(undefined)
   const [bgScene, setBgScene] = useState<string | undefined>(undefined)
   const [preferencesView, setPreferencesView] = useState<boolean>(false)
-  const [bgPresetMode, setBgPresetMode] = useState<boolean>(false)
-  const [bgPreset, setBgPreset] = useState<PresetsType>("city")
-  const [autoRotate, setAutoRotate] = useState<boolean>(true)
+  const [bgPresetMode, setBgPresetMode] = useState<boolean>(true)
+  const [bgPreset, setBgPreset] = useState<PresetsType>("apartment")
+  const [autoRotate, setAutoRotate] = useState<boolean>(false)
   const [rotateSpeed, setRotateSpeed] = useState<number>(3)
   const [showInfo, setShowInfo] = useState<boolean>(false)
-
 
   useEffect(() => {
     if (selectedFile) {
@@ -37,15 +35,19 @@ function App() {
     }
   }, [selectedFile])
 
-  // download da cena
+  // exporta mockup
   function handleNewMockup() {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = 'image/*'
+    input.accept = 'image/png, image/jpeg, image/jpg'
     input.onchange = (e: Event) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (file) {
-        setSelectedFile(file)
+        if (file.size > 5 * 1024 * 1024)
+          window.alert("Imagem muito grande! Utilize arquivos até 5MB.")
+        else {
+          setSelectedFile(file)
+        }
       }
     }
     input.click()
@@ -145,7 +147,7 @@ function App() {
             </motion.div>
 
             <div
-              className='absolute bottom-2 flex flex-row items-center justify-center gap-3'
+              className='absolute bottom-2 flex flex-row items-center justify-center gap-2'
             >
               <motion.div
                 onClick={handleNewMockup}

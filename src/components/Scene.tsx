@@ -20,19 +20,16 @@ interface SceneProps {
 export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset, autoRotate, rotateSpeed }: SceneProps) {
   const cameraRef = useRef<PerspectiveCamera | null>(null);
   const cameraPosition: [number, number, number] = useMemo(() => {
-    if (typeof window !== 'undefined') {
-      if (window.innerWidth < 768) {
-        // Telas pequenas
-        return [260, 80, 20] as [number, number, number]
-      }
-    }
-    // Telas grandes
-    return [260, 80, 20] as [number, number, number]
-  }, [])
 
-  useEffect(() => {
-    console.log("rotate speed alterado:\n", rotateSpeed)
-  }, [rotateSpeed])
+    if (typeof window !== 'undefined') {
+
+      if (window.innerWidth < 768) {
+        return [-380, 70, 60] as [number, number, number]
+      }
+
+    }
+    return [320, 100, 20] as [number, number, number]
+  }, [])
 
   function renderModel(modelo: 'blister' | 'caneca') {
     if (modelo === 'caneca') {

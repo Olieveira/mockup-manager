@@ -9,7 +9,7 @@ interface ModeloMockupProps {
 export function CanecaMockup({ arte }: ModeloMockupProps) {
   const textureUrl = arte || "/arte.jpg"
   const texture = useTexture(textureUrl)
-  const { scene } = useGLTF('/mockup-caneca.glb')
+  const { scene } = useGLTF('/caneca.glb')
 
   // Clona a cena original
   const clonedScene = useMemo(() => scene.clone(true), [scene, arte])

@@ -18,7 +18,6 @@ export function BlisterMockup({ arte }: BlisterProps) {
   const { scene } = useGLTF('/card-blister-sm.glb')
 
   useEffect(() => {
-    console.log("Arte recebida no blister:\n", arte)
     if (!arte) return
     return () => {
       URL.revokeObjectURL(textureUrl)
@@ -34,8 +33,6 @@ export function BlisterMockup({ arte }: BlisterProps) {
 
   useEffect(() => {
     if (!scene) return
-
-    console.log(scene)
 
     const cardFrente = scene.getObjectByName('CardFrente')
     const cardVerso = scene.getObjectByName('CardVerso')
