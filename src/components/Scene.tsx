@@ -12,29 +12,24 @@ interface SceneProps {
   arte: string | undefined,
   bgColor: string | undefined,
   bgPresetMode: boolean,
-  bgPreset: PresetsType
+  bgPreset: PresetsType,
+  autoRotate: boolean,
+  rotateSpeed: number
 }
 
-export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset }: SceneProps) {
+export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset, autoRotate, rotateSpeed }: SceneProps) {
   const cameraRef = useRef<PerspectiveCamera | null>(null);
-
   const cameraPosition: [number, number, number] = useMemo(() => {
-    if (typeof window !== 'undefined') {
-      if (window.innerWidth < 768) {
-        // Telas pequenas
-        return [260, 80, 20] as [number, number, number]
-      }
-    }
-    // Telas grandes
-    return [260, 80, 20] as [number, number, number]
-  }, [])
 
-  // useEffect(() => {
-  //   if (cameraRef.current) {
-  //     console.log('Camera position:', cameraRef.current.position.toArray());
-  //     console.log('Camera rotation:', cameraRef.current.rotation.toArray());
-  //   }
-  // }, [modelo]);
+    if (typeof window !== 'undefined') {
+
+      if (window.innerWidth < 768) {
+        return [-380, 70, 60] as [number, number, number]
+      }
+
+    }
+    return [320, 100, 20] as [number, number, number]
+  }, [])
 
   function renderModel(modelo: 'blister' | 'caneca') {
     if (modelo === 'caneca') {
@@ -55,7 +50,7 @@ export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset }: ScenePr
           alpha: false // fundo opaco
         }}
         dpr={[1, 2]}
-        camera={{ position: cameraPosition, fov: 80 }}
+        camera={{ position: cameraPosition, fov: 50 }}
         onCreated={({ gl, camera }) => {
           gl.setClearColor(bgColor ? bgColor : '#f0d8d8')
           cameraRef.current = camera as PerspectiveCamera
@@ -68,11 +63,28 @@ export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset }: ScenePr
         <Suspense fallback={null}>
           <Environment preset={bgPreset ? bgPreset : "city"} background={bgPresetMode} />
 
+          <directionalLight
+            position={[100, 100, 100]}
+            intensity={0.2}
+            castShadow
+            shadow-mapSize-width={1024}
+            shadow-mapSize-height={1024}
+            shadow-bias={-0.0001}
+          />
+          <directionalLight
+            position={[-100, 100, 100]}
+            intensity={0.2}
+            castShadow
+            shadow-mapSize-width={1024}
+            shadow-mapSize-height={1024}
+            shadow-bias={-0.0001}
+          />
+
           {renderModel(modelo)}
 
           <ContactShadows
             position={[0, 0, 0]}
-            opacity={0.4}
+            opacity={1}
             scale={10}
             blur={2.5}
             far={2.5}
@@ -80,12 +92,13 @@ export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset }: ScenePr
         </Suspense>
 
         <OrbitControls
-          autoRotate
+          autoRotate={autoRotate}
+          autoRotateSpeed={rotateSpeed}
+          rotateSpeed={0.6}
           target={[0, 0, 0]}
           enablePan={false}
           enableDamping
           dampingFactor={0.1}
-          rotateSpeed={0.6}
           zoomSpeed={0.5}
           maxPolarAngle={Math.PI / 2}
         />
