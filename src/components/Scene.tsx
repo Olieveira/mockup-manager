@@ -6,6 +6,8 @@ import { Suspense, useRef, useEffect, useMemo } from 'react'
 import { PerspectiveCamera } from 'three'
 import { BgDinamico } from './BgDinamico'
 import type { PresetsType } from '@react-three/drei/helpers/environment-assets'
+import { AnimatePresence, motion } from 'framer-motion'
+import { IoReload } from 'react-icons/io5'
 
 interface SceneProps {
   modelo: 'blister' | 'caneca',
@@ -14,10 +16,11 @@ interface SceneProps {
   bgPresetMode: boolean,
   bgPreset: PresetsType,
   autoRotate: boolean,
-  rotateSpeed: number
+  rotateSpeed: number,
+  isLoading: boolean
 }
 
-export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset, autoRotate, rotateSpeed }: SceneProps) {
+export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset, autoRotate, rotateSpeed, isLoading }: SceneProps) {
   const cameraRef = useRef<PerspectiveCamera | null>(null);
   const cameraPosition: [number, number, number] = useMemo(() => {
 
@@ -57,12 +60,9 @@ export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset, autoRotat
         }}
         style={{ background: bgColor ? bgColor : '#f0d8d8' }}
       >
-
         <BgDinamico color={bgColor || '#fff'} />
-
         <Suspense fallback={null}>
           <Environment preset={bgPreset ? bgPreset : "city"} background={bgPresetMode} />
-
           <directionalLight
             position={[100, 100, 100]}
             intensity={0.2}
@@ -79,9 +79,7 @@ export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset, autoRotat
             shadow-mapSize-height={1024}
             shadow-bias={-0.0001}
           />
-
           {renderModel(modelo)}
-
           <ContactShadows
             position={[0, 0, 0]}
             opacity={1}
@@ -90,7 +88,6 @@ export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset, autoRotat
             far={2.5}
           />
         </Suspense>
-
         <OrbitControls
           autoRotate={autoRotate}
           autoRotateSpeed={rotateSpeed}
@@ -103,6 +100,19 @@ export function Scene({ modelo, arte, bgColor, bgPresetMode, bgPreset, autoRotat
           maxPolarAngle={Math.PI / 2}
         />
       </Canvas >
+
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            className='absolute z-50 w-full h-full flex justify-center items-center bg-gray-900/50'>
+            <IoReload className='w-14 h-14 animate-spin ease-in text-gray-300' />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

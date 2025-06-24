@@ -24,6 +24,7 @@ export function CanecaMockup({ arte }: ModeloMockupProps) {
   useEffect(() => {
     const parteCustomizavel = clonedScene.getObjectByName('Arte') as Mesh
     if (parteCustomizavel && parteCustomizavel.material) {
+      parteCustomizavel.renderOrder = 999
       if (Array.isArray(parteCustomizavel.material)) {
         parteCustomizavel.material = parteCustomizavel.material.map(mat => {
           if (mat instanceof MeshStandardMaterial) {
