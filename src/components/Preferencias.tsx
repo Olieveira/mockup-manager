@@ -93,12 +93,12 @@ export function Preferencias({
                         <label className="text-gray-200">Rotação automática</label>
                         <button
                             type="button"
-                            className={`relative inline-flex items-center h-6 rounded-full w-12 transition-colors focus:outline-none ${currentRotate ? 'bg-blue-600' : 'bg-gray-600'}`}
+                            className={`relative inline-flex items-center h-6 rounded-full w-12 transition-colors focus:outline-hidden ${currentRotate ? 'bg-blue-600' : 'bg-gray-600'}`}
                             onClick={() => handleChangeAutoRotate(!currentRotate)}
                             aria-label="Alternar rotação automática"
                         >
                             <span
-                                className={`inline-block w-6 h-6 transform bg-white rounded-full shadow transition-transform ${currentRotate ? 'translate-x-6' : 'translate-x-0'}`}
+                                className={`inline-block w-6 h-6 transform bg-white rounded-full shadow-sm transition-transform ${currentRotate ? 'translate-x-6' : 'translate-x-0'}`}
                             />
                         </button>
                     </div>
@@ -202,7 +202,7 @@ export function Preferencias({
                                         </motion.span>
                                         <div className="flex gap-2 mt-2">
                                             <button
-                                                className="px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50"
+                                                className="px-2 py-1 rounded-sm bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50"
                                                 onClick={() => setPresetIndex((prev) => prev > 0 ? prev - 1 : presets.length - 1)}
                                                 disabled={presets.length <= 1}
                                                 aria-label="Preset anterior"
@@ -210,7 +210,7 @@ export function Preferencias({
                                                 <FaArrowLeft className="w-5 h-5 text-blue-400 transition-colors" />
                                             </button>
                                             <button
-                                                className="px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50"
+                                                className="px-2 py-1 rounded-sm bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50"
                                                 onClick={() => setPresetIndex((prev) => prev < presets.length - 1 ? prev + 1 : 0)}
                                                 disabled={presets.length <= 1}
                                                 aria-label="Próximo preset"
@@ -226,7 +226,7 @@ export function Preferencias({
                 </div>
 
                 <button
-                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
+                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-sm transition"
                     onClick={handleClose}
                 >
                     Salvar Preferências

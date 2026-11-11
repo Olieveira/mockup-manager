@@ -26,7 +26,7 @@ export function InfoPopOver({ show, direction = 'top', children, className = '' 
           animate={{ opacity: 1, y: 0, x: 0 }}
           exit={{ opacity: 0, y: direction === 'top' ? 10 : direction === 'bottom' ? -10 : 0, x: direction === 'left' ? 10 : direction === 'right' ? -10 : 0 }}
           transition={{ duration: 0.2 }}
-          className={`absolute z-50 px-3 py-2 rounded shadow-lg bg-gray-900/80 text-white text-xs font-medium pointer-events-none whitespace-pre-line ${directionStyles[direction]} ${className}`}
+          className={`absolute z-50 px-3 py-2 rounded-sm shadow-lg bg-gray-900/80 text-white text-xs font-medium pointer-events-none whitespace-pre-line ${directionStyles[direction]} ${className}`}
         >
           {children}
         </motion.div>

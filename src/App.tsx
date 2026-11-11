@@ -78,7 +78,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen min-w-screen flex flex-col bg-gradient-to-br from-gray-800 to-slate-950">
+    <div className="min-h-screen min-w-screen flex flex-col bg-linear-to-br from-gray-800 to-slate-950">
       <Header />
       <main className="flex flex-1 flex-col sm:flex-row">
         <section className="flex-1 flex items-center justify-center p-2">
