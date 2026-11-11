@@ -1,5 +1,5 @@
 import type { PresetsType } from '@react-three/drei/helpers/environment-assets';
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'motion/react'
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa6'
 import { useEffect, useState } from 'react';
 

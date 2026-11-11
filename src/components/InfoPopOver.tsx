@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import React from 'react';
 
 export type InfoPopOverDirection = 'top' | 'bottom' | 'left' | 'right';

@@ -5,7 +5,7 @@ import {
   FaFileCirclePlus, FaArrowsRotate, FaArrowLeft, FaArrowRight, FaGear, FaDownload, FaRotate,
   FaCircleStop, FaEye, FaEyeSlash
 } from "react-icons/fa6"
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { Preferencias } from './components/Preferencias'
 import type { PresetsType } from '@react-three/drei/helpers/environment-assets'
 import { InfoPopOver } from './components/InfoPopOver'
