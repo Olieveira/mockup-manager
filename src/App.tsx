@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Scene } from './components/Scene'
 import Header from './components/Header'
 import {
@@ -7,7 +7,7 @@ import {
 } from "react-icons/fa6"
 import { motion, AnimatePresence } from 'framer-motion'
 import { Preferencias } from './components/Preferencias'
-import { PresetsType } from '@react-three/drei/helpers/environment-assets'
+import type { PresetsType } from '@react-three/drei/helpers/environment-assets'
 import { InfoPopOver } from './components/InfoPopOver'
 
 function App() {

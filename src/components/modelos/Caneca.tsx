@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useGLTF, useTexture } from '@react-three/drei'
-import { DoubleSide, Mesh, MeshStandardMaterial, Object3D } from 'three'
+import { DoubleSide, Mesh, MeshStandardMaterial } from 'three'
 
 interface ModeloMockupProps {
   arte: string | undefined;
