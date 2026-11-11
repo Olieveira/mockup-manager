@@ -118,7 +118,7 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
         icon={showHints ? <FaEyeSlash /> : <FaEye />}
         onClick={() => setShowHints((show) => !show)}
         showHint={showHints}
-        hintDirection="right"
+        hintDirection="top-start"
       />
 
       <div className="absolute bottom-2 flex items-center justify-center gap-2">
