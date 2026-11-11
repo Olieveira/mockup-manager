@@ -1,263 +1,50 @@
-import { useEffect, useState } from 'react'
-import { Scene } from './components/Scene'
-import Header from './components/Header'
-import {
-  FaFileCirclePlus, FaArrowsRotate, FaArrowLeft, FaArrowRight, FaGear, FaDownload, FaRotate,
-  FaCircleStop, FaEye, FaEyeSlash
-} from "react-icons/fa6"
-import { motion, AnimatePresence } from 'motion/react'
-import { Preferencias } from './components/Preferencias'
-import type { PresetsType } from '@react-three/drei/helpers/environment-assets'
-import { InfoPopOver } from './components/InfoPopOver'
+import { useCallback, useEffect, useState } from 'react'
+import { AnimatePresence } from 'motion/react'
+import { Header } from './components/Header'
+import { PreferencesModal } from './components/PreferencesModal'
+import { Viewer } from './components/Viewer'
+import { DEFAULT_SCENE_SETTINGS } from './config/scene'
+import type { SceneSettings } from './config/scene'
 
-function App() {
-  const [models, setModels] = useState<'blister' | 'caneca'>('blister')
-  const [selectedFile, setSelectedFile] = useState<File | undefined>()
-  const [arteUrl, setArteUrl] = useState<string | undefined>(undefined)
-  const [bgScene, setBgScene] = useState<string | undefined>(undefined)
-  const [preferencesView, setPreferencesView] = useState<boolean>(false)
-  const [bgPresetMode, setBgPresetMode] = useState<boolean>(true)
-  const [bgPreset, setBgPreset] = useState<PresetsType>("apartment")
-  const [autoRotate, setAutoRotate] = useState<boolean>(false)
-  const [rotateSpeed, setRotateSpeed] = useState<number>(3)
-  const [showInfo, setShowInfo] = useState<boolean>(false)
+function preventDefault(event: Event) {
+  event.preventDefault()
+}
 
-  useEffect(() => {
-    window.addEventListener('dragover', (e) => e.preventDefault())
-    window.addEventListener('drop', (e) => e.preventDefault())
+export function App() {
+  const [settings, setSettings] = useState(DEFAULT_SCENE_SETTINGS)
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
+
+  const updateSettings = useCallback((changes: Partial<SceneSettings>) => {
+    setSettings((current) => ({ ...current, ...changes }))
   }, [])
 
+  const closePreferences = useCallback(() => setIsPreferencesOpen(false), [])
+
+  // Evita que o navegador abra um arquivo solto fora da área do mockup
   useEffect(() => {
-    if (selectedFile) {
-      const url = URL.createObjectURL(selectedFile)
-      setArteUrl(url)
-      return () => {
-        URL.revokeObjectURL(url)
-      }
-    } else {
-      setArteUrl(undefined)
+    window.addEventListener('dragover', preventDefault)
+    window.addEventListener('drop', preventDefault)
+    return () => {
+      window.removeEventListener('dragover', preventDefault)
+      window.removeEventListener('drop', preventDefault)
     }
-  }, [selectedFile])
-
-  // exporta mockup
-  function handleNewMockup() {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'image/png, image/jpeg, image/jpg'
-    input.onchange = (e: Event) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (file) {
-        if (file.size > 5 * 1024 * 1024)
-          window.alert("Imagem muito grande! Utilize arquivos até 5MB.")
-        else {
-          setSelectedFile(file)
-        }
-      }
-    }
-    input.click()
-  }
-
-  function handleExport() {
-    // Aguarda o render do Three.js antes de capturar
-    setTimeout(() => {
-      const canvas = document.querySelector('.bg-gray-950 canvas') as HTMLCanvasElement | null;
-      if (!canvas) {
-        alert('Não foi possível encontrar a visualização para exportar.');
-        return;
-      }
-      const dataUrl = canvas.toDataURL('image/png');
-
-      // Link para download
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = 'mockup.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }, 100);
-  }
+  }, [])
 
   return (
-    <div className="min-h-screen min-w-screen flex flex-col bg-linear-to-br from-gray-800 to-slate-950">
+    <div className="flex min-h-dvh flex-col bg-linear-to-br from-gray-800 to-slate-950">
       <Header />
-      <main className="flex flex-1 flex-col sm:flex-row">
-        <section className="flex-1 flex items-center justify-center p-2">
-          <div className="relative w-full h-full bg-gray-950 rounded-lg shadow-lg flex items-center justify-center
-            sm:aspect-video aspect-[16/24] sm:max-w-5xl max-w-full sm:max-h-none max-h-[80vh]">
-            <motion.div
-              onClick={() => { setShowInfo((prev) => !prev) }}
-              className="absolute bottom-2 left-2 z-30 w-10 h-10 bg-gray-800/80 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-700 transition"
-              title="Mostrar/ocultar labels dos ícones"
-            >
-              {showInfo ? <FaEyeSlash className="text-white text-xl" /> : <FaEye className="text-white text-xl" />}
-              <InfoPopOver show={showInfo} direction="top">
-                Mostrar/ocultar dicas dos botões
-              </InfoPopOver>
-            </motion.div>
-            <motion.div
-              className="absolute top-3 right-3 z-20 w-10 h-10 bg-gray-800/80 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-700 transition"
-              title="Preferências do Mockup"
-            >
-              <FaGear
-                onClick={() => { setPreferencesView(true) }}
-                className="text-white text-xl" />
-              <InfoPopOver show={showInfo} direction="left">
-                Preferências do mockup
-              </InfoPopOver>
-            </motion.div>
-
-            <motion.div
-              className="absolute top-3 left-3 z-20 w-10 h-10 bg-gray-800/80 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-700 transition"
-              title="Ativar/desativar rotação automática"
-              onClick={() => setAutoRotate((prev) => !prev)}
-            >
-              {autoRotate ? <FaCircleStop className="text-white text-xl" /> : <FaRotate className="text-white text-xl" />}
-              <InfoPopOver show={showInfo} direction="right">
-                {autoRotate ? 'Desativar rotação automática' : 'Ativar rotação automática'}
-              </InfoPopOver>
-            </motion.div>
-
-            <Scene modelo={models}
-              arte={arteUrl}
-              bgColor={bgScene}
-              bgPresetMode={bgPresetMode}
-              bgPreset={bgPreset}
-              autoRotate={autoRotate}
-              rotateSpeed={rotateSpeed}
-            />
-
-
-
-            <motion.div
-              className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 bg-gray-800/70 rounded-full cursor-pointer hover:bg-gray-700 transition"
-              onClick={() => setModels(models === 'blister' ? 'caneca' : 'blister')}
-              aria-label="Anterior"
-            >
-              <FaArrowLeft className="text-white text-2xl select-none" />
-              <InfoPopOver show={showInfo} direction="right">
-                Mockup anterior
-              </InfoPopOver>
-            </motion.div>
-            <motion.div
-              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 bg-gray-800/70 rounded-full cursor-pointer hover:bg-gray-700 transition"
-              onClick={() => setModels(models === 'blister' ? 'caneca' : 'blister')}
-              aria-label="Próximo"
-            >
-              <FaArrowRight className="text-white text-2xl select-none" />
-              <InfoPopOver show={showInfo} direction="left">
-                Próximo mockup
-              </InfoPopOver>
-            </motion.div>
-
-            <div
-              className='absolute bottom-2 flex flex-row items-center justify-center gap-2'
-            >
-              <motion.div
-                onClick={handleNewMockup}
-                className={`p-1.5 min-w-10 min-h-10 bg-gray-800 rounded-full cursor-pointer hover:bg-gray-700 transition-all flex flex-col justify-center items-center overflow-hidden`}
-                animate={{
-                  height: showInfo ? 50 : 30,
-                  width: showInfo ? (showInfo && window.innerWidth < 640 ? 80 : 160) : 40,
-                  minWidth: showInfo ? (window.innerWidth < 640 ? 80 : 160) : 40,
-                  transition: { ease: 'easeInOut', duration: 0.2 }
-                }}
-              >
-                <AnimatePresence>
-                  {showInfo && (
-                    <motion.span
-                      initial={{ opacity: 0, y: -30, scaleX: 0, transition: { delay: 0.3 } }}
-                      animate={{ opacity: 1, y: 0, scaleX: 1 }}
-                      exit={{ opacity: 0, y: -30, scaleX: 0, transition: { duration: 0.2 } }}
-                      transition={{ duration: 0.5, ease: 'easeInOut' }}
-                      className='text-xs text-white p-1 text-center text-wrap'>
-                      Trocar arte
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-
-                {!showInfo && (
-                  <FaFileCirclePlus color='#fff' size={'1.2rem'} className='relative' />
-                )}
-
-              </motion.div>
-
-              <motion.div
-                animate={{
-                  height: showInfo ? 50 : 30,
-                  width: showInfo ? (showInfo && window.innerWidth < 640 ? 80 : 160) : 40,
-                  minWidth: showInfo ? (window.innerWidth < 640 ? 80 : 160) : 40,
-                  transition: { ease: 'easeInOut', duration: 0.2 }
-                }}
-                onClick={() => { setSelectedFile(undefined) }}
-                className={`p-1.5 min-w-10 min-h-10 bg-gray-800 rounded-full cursor-pointer hover:bg-gray-700 transition-all flex flex-col justify-center items-center`}
-                transition={{ duration: 0.8 }}
-              >
-                {showInfo && (
-                  <motion.span
-                    initial={{ opacity: 0, y: -30, scaleX: 0, transition: { delay: 0.3 } }}
-                    animate={{ opacity: 1, y: 0, scaleX: 1 }}
-                    exit={{ opacity: 0, y: -30, scaleX: 0, transition: { duration: 0.2 } }}
-                    transition={{ duration: 0.5, ease: 'easeInOut' }}
-                    className='text-xs text-white p-1 text-center text-wrap'>
-                    Redefinir
-                  </motion.span>
-                )}
-
-                {!showInfo && (
-                  <FaArrowsRotate color='#fff' />
-                )}
-
-              </motion.div>
-
-              <motion.div
-                animate={{
-                  height: showInfo ? 50 : 30,
-                  width: showInfo ? (showInfo && window.innerWidth < 640 ? 80 : 160) : 40,
-                  minWidth: showInfo ? (window.innerWidth < 640 ? 80 : 160) : 40,
-                  transition: { ease: 'easeInOut', duration: 0.2 }
-                }}
-                onClick={handleExport}
-                className={`p-1.5 min-w-10 min-h-10 bg-gray-800 rounded-full cursor-pointer hover:bg-gray-700 transition-all flex flex-col justify-center items-center`}
-                transition={{ duration: 0.8 }}
-              >
-                {showInfo && (
-                  <motion.span
-                    initial={{ opacity: 0, y: -30, scaleX: 0, transition: { delay: 0.3 } }}
-                    animate={{ opacity: 1, y: 0, scaleX: 1 }}
-                    exit={{ opacity: 0, y: -30, scaleX: 0, transition: { duration: 0.2 } }}
-                    transition={{ duration: 0.5, ease: 'easeInOut' }}
-                    className='text-xs text-white p-1 text-center text-wrap'>
-                    Exportar
-                  </motion.span>
-                )}
-                {!showInfo && (
-                  <FaDownload color='#fff' />
-                )}
-              </motion.div>
-
-            </div>
-          </div>
-        </section>
+      <main className="flex flex-1 justify-center p-2">
+        <Viewer
+          settings={settings}
+          onToggleAutoRotate={() => updateSettings({ autoRotate: !settings.autoRotate })}
+          onOpenPreferences={() => setIsPreferencesOpen(true)}
+        />
       </main>
       <AnimatePresence>
-        {preferencesView && (
-          <Preferencias
-            handleClose={() => setPreferencesView(false)}
-            handleChangeColor={(color: string) => { setBgScene(color) }}
-            handleChangePresetMode={(presetMode) => { setBgPresetMode(presetMode) }}
-            handleChangePreset={(preset) => { setBgPreset(preset) }}
-            handleChangeAutoRotate={(rotate) => { setAutoRotate(rotate) }}
-            handleChangeRotateSpeed={(speed) => { setRotateSpeed(speed) }}
-            currentColor={bgScene ? bgScene : "#ffffff"}
-            currentBgMode={bgPresetMode}
-            currentPreset={bgPreset}
-            currentSpeed={rotateSpeed}
-            currentRotate={autoRotate}
-          />
+        {isPreferencesOpen && (
+          <PreferencesModal settings={settings} onChange={updateSettings} onClose={closePreferences} />
         )}
       </AnimatePresence>
     </div>
   )
 }
-
-export default App
