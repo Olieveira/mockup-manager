@@ -13,6 +13,7 @@ import type { SceneSettings } from '../config/scene'
 import { useArtwork } from '../hooks/useArtwork'
 import { ACCEPTED_ARTWORK_TYPES } from '../lib/artwork'
 import { saveImage } from '../lib/saveImage'
+import { StageErrorBoundary } from './StageErrorBoundary'
 import type { SceneHandle } from './scene/Scene'
 import { MODEL_CATALOG, MODEL_IDS } from './scene/models/catalog'
 import { CropMarks } from './ui/CropMarks'
@@ -125,15 +126,17 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
       >
         <CropMarks />
         <div className="absolute inset-0 overflow-hidden bg-sunken">
-          <Suspense fallback={<StageProgress placement="center" label="Preparando o visualizador" />}>
-            <Scene
-              ref={sceneRef}
-              model={model}
-              artworkUrl={artworkUrl}
-              settings={settings}
-              onReady={markSceneReady}
-            />
-          </Suspense>
+          <StageErrorBoundary>
+            <Suspense fallback={<StageProgress placement="center" label="Preparando o visualizador" />}>
+              <Scene
+                ref={sceneRef}
+                model={model}
+                artworkUrl={artworkUrl}
+                settings={settings}
+                onReady={markSceneReady}
+              />
+            </Suspense>
+          </StageErrorBoundary>
         </div>
 
         {dragDepth > 0 && (
