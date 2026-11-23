@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AnimatePresence } from 'motion/react'
 import { Header } from './components/Header'
-import { PreferencesModal } from './components/PreferencesModal'
+import { PreferencesPanel } from './components/PreferencesPanel'
 import { Viewer } from './components/Viewer'
 import { DEFAULT_SCENE_SETTINGS } from './config/scene'
 import type { SceneSettings } from './config/scene'
@@ -40,11 +39,12 @@ export function App() {
           onOpenPreferences={() => setIsPreferencesOpen(true)}
         />
       </main>
-      <AnimatePresence>
-        {isPreferencesOpen && (
-          <PreferencesModal settings={settings} onChange={updateSettings} onClose={closePreferences} />
-        )}
-      </AnimatePresence>
+      <PreferencesPanel
+        open={isPreferencesOpen}
+        settings={settings}
+        onChange={updateSettings}
+        onClose={closePreferences}
+      />
     </div>
   )
 }

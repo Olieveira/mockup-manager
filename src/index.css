@@ -40,6 +40,15 @@
   --danger-line: oklch(0.45 0.1 25);
 }
 
+/* O reset precisa vir antes dos tokens, senão também os apaga */
+@theme {
+  /* Sem a paleta, os raios e as sombras padrão do Tailwind: só os tokens deste
+     arquivo existem, então uma cor solta (bg-blue-600) nem chega a ser gerada */
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+}
+
 @theme inline {
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);

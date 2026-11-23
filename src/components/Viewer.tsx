@@ -131,8 +131,8 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
         <Notice message={error ?? exportError} onDismiss={dismissErrors} />
       </div>
 
-      <div className="flex shrink-0 gap-1.5 sm:justify-between sm:gap-2">
-        <div className="flex gap-1.5 max-sm:contents sm:gap-2">
+      <div className="flex shrink-0 gap-1 sm:justify-between sm:gap-2">
+        <div className="flex gap-2 max-sm:contents">
           <ToolButton
             label="Girar"
             icon={<PiArrowsClockwise />}
@@ -141,9 +141,10 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
           />
           <ToolButton label="Ajustes" icon={<PiSlidersHorizontal />} onClick={onOpenPreferences} />
         </div>
-        <div className="flex gap-1.5 max-sm:contents sm:gap-2">
+        <div className="flex gap-2 max-sm:contents">
           <ToolButton
             label="Trocar arte"
+            shortLabel="Arte"
             icon={<PiImageSquare />}
             onClick={() => fileInputRef.current?.click()}
             busy={isProcessing}

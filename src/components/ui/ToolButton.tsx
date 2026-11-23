@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 
 interface ToolButtonProps {
   label: string
+  /** Rótulo para telas estreitas, quando o normal não cabe. */
+  shortLabel?: string
   icon: ReactNode
   onClick: () => void
   variant?: 'default' | 'primary'
@@ -22,6 +24,7 @@ const variants = {
  */
 export function ToolButton({
   label,
+  shortLabel,
   icon,
   onClick,
   variant = 'default',
@@ -38,12 +41,19 @@ export function ToolButton({
       aria-disabled={busy || undefined}
       aria-pressed={pressed}
       aria-busy={busy || undefined}
-      className={`flex min-w-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-control border px-2 text-xs font-medium transition-[background-color,border-color,opacity] duration-150 max-sm:h-14 max-sm:flex-1 sm:h-10 sm:flex-row sm:gap-2 sm:px-3.5 sm:text-sm disabled:cursor-not-allowed disabled:opacity-45 aria-busy:cursor-wait aria-busy:opacity-70 ${variants[variant]}`}
+      className={`flex min-w-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-control border px-1 text-xs font-medium transition-[background-color,border-color,opacity] duration-150 max-sm:h-14 max-sm:flex-auto sm:h-10 sm:flex-row sm:gap-2 sm:px-3.5 sm:text-sm disabled:cursor-not-allowed disabled:opacity-45 aria-busy:cursor-wait aria-busy:opacity-70 ${variants[variant]}`}
     >
       <span aria-hidden className="text-lg leading-none">
         {icon}
       </span>
-      <span className="truncate">{label}</span>
+      {shortLabel ? (
+        <>
+          <span className="max-w-full truncate sm:hidden">{shortLabel}</span>
+          <span className="max-w-full truncate max-sm:hidden">{label}</span>
+        </>
+      ) : (
+        <span className="max-w-full truncate">{label}</span>
+      )}
     </button>
   )
 }
