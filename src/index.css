@@ -93,6 +93,25 @@
   }
 }
 
+/*
+ * Espaçamento que respeita a safe area do iPhone (notch, cantos e barra de
+ * início). Com viewport-fit=cover a página ocupa a tela toda, então as bordas
+ * usam o maior valor entre o respiro normal e a área ocupada pelo aparelho.
+ * Ex.: px-safe-4 = no mínimo 1rem de cada lado.
+ */
+@utility px-safe-* {
+  padding-left: max(calc(var(--spacing) * --value(number)), env(safe-area-inset-left));
+  padding-right: max(calc(var(--spacing) * --value(number)), env(safe-area-inset-right));
+}
+
+@utility pb-safe-* {
+  padding-bottom: max(calc(var(--spacing) * --value(number)), env(safe-area-inset-bottom));
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
 @layer base {
   html {
     background-color: var(--canvas);

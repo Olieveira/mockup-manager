@@ -98,7 +98,7 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
   return (
     <section
       aria-label="Mockup"
-      className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 px-4 pt-2 pb-4 sm:px-6 sm:pt-3 sm:pb-5"
+      className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 px-safe-4 pt-2 pb-safe-4 sm:px-safe-6 sm:pt-3 sm:pb-safe-5"
     >
       <div className="flex h-10 shrink-0 items-center justify-between gap-4">
         <div className="-ml-2 flex items-center">
