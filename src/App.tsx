@@ -31,9 +31,9 @@ export function App() {
   }, [])
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex h-dvh flex-col">
       <Header />
-      <main className="flex flex-1 justify-center p-2">
+      <main className="flex min-h-0 flex-1 flex-col">
         <Viewer
           settings={settings}
           onToggleAutoRotate={() => updateSettings({ autoRotate: !settings.autoRotate })}

@@ -1,30 +1,26 @@
 import type { ReactNode } from 'react'
-import { InfoPopover } from './InfoPopover'
-import type { PopoverDirection } from './InfoPopover'
+import { Tooltip } from './Tooltip'
+import type { TooltipSide } from './Tooltip'
 
 interface IconButtonProps {
   label: string
   icon: ReactNode
   onClick: () => void
-  showHint: boolean
-  hintDirection: PopoverDirection
+  tooltipSide?: TooltipSide
   className?: string
 }
 
-/** Botão redondo sobreposto à cena, com dica opcional ao lado. */
-export function IconButton({ label, icon, onClick, showHint, hintDirection, className = '' }: IconButtonProps) {
+/** Botão só de ícone. O rótulo vira aria-label e aparece como dica no hover e no foco. */
+export function IconButton({ label, icon, onClick, tooltipSide = 'top', className = '' }: IconButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
-      title={label}
-      className={`absolute z-20 flex size-10 cursor-pointer items-center justify-center rounded-full bg-gray-800/80 text-xl text-white transition hover:bg-gray-700 ${className}`}
+      className={`group relative grid size-9 shrink-0 cursor-pointer place-items-center rounded-control text-lg text-ink-muted transition-colors hover:bg-fill-hover hover:text-ink active:bg-fill-pressed ${className}`}
     >
       {icon}
-      <InfoPopover show={showHint} direction={hintDirection}>
-        {label}
-      </InfoPopover>
+      <Tooltip side={tooltipSide}>{label}</Tooltip>
     </button>
   )
 }
