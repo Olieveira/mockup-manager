@@ -31,7 +31,7 @@ export function App() {
   }, [])
 
   return (
-    <div className="flex min-h-dvh flex-col bg-linear-to-br from-gray-800 to-slate-950">
+    <div className="flex min-h-dvh flex-col">
       <Header />
       <main className="flex flex-1 justify-center p-2">
         <Viewer
