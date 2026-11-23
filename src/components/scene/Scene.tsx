@@ -1,10 +1,11 @@
-import { Suspense, useDeferredValue, useEffect, useImperativeHandle, useState } from 'react'
+import { Suspense, useCallback, useDeferredValue, useEffect, useImperativeHandle, useState } from 'react'
 import type { Ref } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
-import { Environment, OrbitControls } from '@react-three/drei'
-import type { SceneSettings } from '../../config/scene'
-import { MODELS } from './models'
-import type { ModelId } from './models'
+import { Environment, OrbitControls, useTexture } from '@react-three/drei'
+import type { EnvironmentPreset, SceneSettings } from '../../config/scene'
+import { MODEL_IDS } from './models/catalog'
+import type { ModelId } from './models/catalog'
+import { MODEL_COMPONENTS, preloadModel } from './models'
 
 type Vector3Tuple = [number, number, number]
 
@@ -23,11 +24,24 @@ export interface SceneHandle {
   capture: () => Promise<Blob>
 }
 
-interface SceneProps {
+export interface SceneProps {
   ref?: Ref<SceneHandle>
   model: ModelId
   artworkUrl: string | null
   settings: SceneSettings
+  /** Chamado uma vez, quando modelo, arte e cenário terminam de carregar. */
+  onReady?: () => void
+}
+
+/** Roda o callback quando o navegador estiver ocioso. Devolve o cancelamento. */
+function whenIdle(callback: () => void) {
+  // O Safari não tem requestIdleCallback
+  if ('requestIdleCallback' in window) {
+    const id = requestIdleCallback(callback, { timeout: 4000 })
+    return () => cancelIdleCallback(id)
+  }
+  const id = setTimeout(callback, 1500)
+  return () => clearTimeout(id)
 }
 
 function ClearColor({ color }: { color: string }) {
@@ -64,26 +78,83 @@ function SceneCapture({ ref }: { ref?: Ref<SceneHandle> }) {
   return null
 }
 
-export function Scene({ ref, model, artworkUrl, settings }: SceneProps) {
+/** Dispara o callback quando o Suspense em volta deixa de esperar. */
+function ReadySignal({ onReady }: { onReady: () => void }) {
+  useEffect(onReady, [onReady])
+  return null
+}
+
+interface SceneContentProps {
+  model: ModelId
+  artworkUrl: string | null
+  environment: EnvironmentPreset
+  showEnvironment: boolean
+  onReady: () => void
+}
+
+function SceneContent({ model, artworkUrl, environment, showEnvironment, onReady }: SceneContentProps) {
+  // Os valores adiados precisam ficar dentro do Canvas: o R3F renderiza os
+  // filhos com o próprio reconciler, e só assim a troca que ainda está
+  // baixando mantém a cena anterior na tela em vez de esvaziá-la
+  const deferredModel = useDeferredValue(model)
+  const deferredArtworkUrl = useDeferredValue(artworkUrl)
+  const deferredEnvironment = useDeferredValue(environment)
+  const Model = MODEL_COMPONENTS[deferredModel]
+
+  // Tira a arte enviada do cache só quando a cena já passou para a próxima.
+  // Antes disso, uma renderização com o valor antigo ainda pode lê-la, e a
+  // URL temporária dela já foi revogada
+  useEffect(() => {
+    if (!deferredArtworkUrl) return
+    return () => useTexture.clear(deferredArtworkUrl)
+  }, [deferredArtworkUrl])
+
+  return (
+    <Suspense fallback={null}>
+      <Environment preset={deferredEnvironment} background={showEnvironment} />
+      {LIGHT_POSITIONS.map((position) => (
+        <directionalLight key={position.join()} position={position} intensity={LIGHT_INTENSITY} />
+      ))}
+      <Model artworkUrl={deferredArtworkUrl} />
+      <ReadySignal onReady={onReady} />
+    </Suspense>
+  )
+}
+
+/**
+ * Cena 3D completa. Fica em um chunk à parte, carregado sob demanda, junto
+ * com three, R3F e drei.
+ */
+export default function Scene({ ref, model, artworkUrl, settings, onReady }: SceneProps) {
   const [cameraPosition] = useState(() =>
     window.matchMedia(MOBILE_QUERY).matches ? MOBILE_CAMERA : DESKTOP_CAMERA,
   )
-  // Mantém o cenário anterior na tela enquanto o novo HDRI é baixado
-  const environment = useDeferredValue(settings.environment)
-  const Model = MODELS[model].Component
+  const [isReady, setIsReady] = useState(false)
+  const markReady = useCallback(() => setIsReady(true), [])
+
+  useEffect(() => {
+    if (isReady) onReady?.()
+  }, [isReady, onReady])
+
+  // Com a primeira cena pronta, adianta os outros modelos em segundo plano
+  useEffect(() => {
+    if (!isReady) return
+    // Uma falha aqui é ignorada: ela volta a aparecer se o modelo for escolhido
+    return whenIdle(() => MODEL_IDS.forEach((id) => preloadModel(id).catch(() => {})))
+  }, [isReady])
 
   return (
     <Canvas dpr={[1, 2]} gl={{ alpha: false }} camera={{ position: cameraPosition, fov: CAMERA_FOV }}>
       <ClearColor color={settings.backgroundColor} />
       <SceneCapture ref={ref} />
 
-      <Suspense fallback={null}>
-        <Environment preset={environment} background={settings.backgroundMode === 'preset'} />
-        {LIGHT_POSITIONS.map((position) => (
-          <directionalLight key={position.join()} position={position} intensity={LIGHT_INTENSITY} />
-        ))}
-        <Model artworkUrl={artworkUrl} />
-      </Suspense>
+      <SceneContent
+        model={model}
+        artworkUrl={artworkUrl}
+        environment={settings.environment}
+        showEnvironment={settings.backgroundMode === 'preset'}
+        onReady={markReady}
+      />
 
       <OrbitControls
         autoRotate={settings.autoRotate}

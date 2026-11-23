@@ -1,4 +1,4 @@
-import { useGLTF } from '@react-three/drei'
+import { useGLTF, useTexture } from '@react-three/drei'
 import { DoubleSide, FrontSide, MeshPhysicalMaterial, MeshStandardMaterial } from 'three'
 import type { Object3D, Texture } from 'three'
 import { useArtworkTexture } from '../useArtworkTexture'
@@ -56,3 +56,4 @@ export function BlisterModel({ artworkUrl }: ModelProps) {
 }
 
 useGLTF.preload(MODEL_URL)
+useTexture.preload(DEFAULT_ARTWORK)

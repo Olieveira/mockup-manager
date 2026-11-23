@@ -1,4 +1,4 @@
-import { useGLTF } from '@react-three/drei'
+import { useGLTF, useTexture } from '@react-three/drei'
 import { DoubleSide, MeshStandardMaterial } from 'three'
 import type { Object3D, Texture } from 'three'
 import { useArtworkTexture } from '../useArtworkTexture'
@@ -36,3 +36,4 @@ export function MugModel({ artworkUrl }: ModelProps) {
 }
 
 useGLTF.preload(MODEL_URL)
+useTexture.preload(DEFAULT_ARTWORK)

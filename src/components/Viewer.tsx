@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent } from 'react'
 import {
   PiArrowCounterClockwise,
@@ -13,15 +13,18 @@ import type { SceneSettings } from '../config/scene'
 import { useArtwork } from '../hooks/useArtwork'
 import { ACCEPTED_ARTWORK_TYPES } from '../lib/artwork'
 import { saveImage } from '../lib/saveImage'
-import { Scene } from './scene/Scene'
 import type { SceneHandle } from './scene/Scene'
-import { MODEL_IDS, MODELS } from './scene/models'
+import { MODEL_CATALOG, MODEL_IDS } from './scene/models/catalog'
 import { CropMarks } from './ui/CropMarks'
 import { IconButton } from './ui/IconButton'
 import { Notice } from './ui/Notice'
 import { ToolButton } from './ui/ToolButton'
 
 const EXPORT_FILE_NAME = 'mockup.png'
+
+// three, R3F e drei ficam fora do pacote inicial: o restante da interface
+// aparece antes, enquanto a cena baixa
+const Scene = lazy(() => import('./scene/Scene'))
 
 interface ViewerProps {
   settings: SceneSettings
@@ -37,6 +40,7 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
   const [modelIndex, setModelIndex] = useState(0)
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
+  const [isSceneReady, setIsSceneReady] = useState(false)
   // Conta entradas e saídas, já que dragleave também dispara ao passar sobre os filhos
   const [dragDepth, setDragDepth] = useState(0)
   const { artworkUrl, error, isProcessing, selectArtwork, resetArtwork, dismissError } = useArtwork()
@@ -44,6 +48,7 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const model = MODEL_IDS[modelIndex]
+  const markSceneReady = useCallback(() => setIsSceneReady(true), [])
 
   function stepModel(step: number) {
     setModelIndex((index) => (index + step + MODEL_IDS.length) % MODEL_IDS.length)
@@ -97,7 +102,7 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
         <div className="-ml-2 flex items-center">
           <IconButton label="Mockup anterior" icon={<PiCaretLeft aria-hidden />} onClick={() => stepModel(-1)} tooltipSide="bottom" />
           <p aria-live="polite" className="flex min-w-28 items-baseline justify-center gap-2 px-2">
-            <span className="text-base font-semibold">{MODELS[model].label}</span>
+            <span className="text-base font-semibold">{MODEL_CATALOG[model].label}</span>
             <span className="text-sm text-ink-muted tabular-nums">
               <span className="sr-only">modelo </span>
               {modelIndex + 1} de {MODEL_IDS.length}
@@ -119,7 +124,15 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
       >
         <CropMarks />
         <div className="absolute inset-0 overflow-hidden bg-sunken">
-          <Scene ref={sceneRef} model={model} artworkUrl={artworkUrl} settings={settings} />
+          <Suspense fallback={null}>
+            <Scene
+              ref={sceneRef}
+              model={model}
+              artworkUrl={artworkUrl}
+              settings={settings}
+              onReady={markSceneReady}
+            />
+          </Suspense>
         </div>
 
         {dragDepth > 0 && (
@@ -161,6 +174,7 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
             onClick={handleExport}
             variant="primary"
             busy={isExporting}
+            disabled={!isSceneReady}
           />
         </div>
       </div>
