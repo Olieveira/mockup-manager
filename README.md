@@ -30,19 +30,19 @@
 
 ## Estrutura do Projeto
 
-- `src/components/`: componentes da interface (header, viewer, painel de ajustes, seletor de tema)
-- `src/components/ui/`: componentes reutilizáveis (botões, dicas, avisos, controles)
+- `src/components/`: componentes da interface (header, viewer, painel de ajustes, seletor de tema, aviso de falha da cena)
+- `src/components/ui/`: componentes reutilizáveis (botões, dicas, avisos, controles, régua de carregamento)
 - `src/components/brand/`: slot do logo
-- `src/components/scene/`: cena 3D e configuração da textura
-- `src/components/scene/models/`: modelos 3D (Blister, Caneca) e o registro em `index.ts`
+- `src/components/scene/`: cena 3D, textura da arte e progresso de carregamento
+- `src/components/scene/models/`: modelos 3D (Blister, Caneca), nome e ordem em `catalog.ts` e carregamento sob demanda em `index.ts`
 - `src/config/`: marca (`brand.ts`), tema e opções iniciais da cena
 - `src/hooks/`: hooks da aplicação
 - `src/lib/`: funções sem React (processamento da arte, exportação, tema)
-- `src/index.css`: tokens de cor, raio, sombra e tipografia
+- `src/index.css`: tokens de cor, raio, sombra e tipografia e utilitários de safe area (`px-safe-*`, `pb-safe-*`, `pt-safe`)
 - `vite/`: plugin que preenche o `index.html` com os dados da marca
 - `public/`: assets estáticos e modelos `.glb`
 
-Para adicionar um modelo, crie o componente em `src/components/scene/models/` e registre em `index.ts`.
+Para adicionar um modelo, crie o componente em `src/components/scene/models/`, inclua o nome em `catalog.ts` e o carregamento em `index.ts`. O TypeScript acusa se um dos dois ficar faltando.
 
 ---
 
@@ -103,6 +103,8 @@ Outros scripts:
 - Imagens enviadas são aceitas com até **25MB** e redimensionadas para no máximo 2048px no navegador.
 - A exportação gera a imagem **com base na visualização atual** da cena 3D.
 - Os ambientes HDRI são carregados sob demanda a partir do CDN usado pelo drei.
+- A cena 3D (three, R3F e drei) e cada modelo ficam em chunks separados, baixados depois que a interface aparece. O pacote inicial tem cerca de 80KB com gzip. Depois que a primeira cena fica pronta, os outros modelos são baixados em segundo plano.
+- Ao trocar de modelo, cenário ou arte, a cena anterior continua na tela até a nova carregar, com o progresso num canto do palco.
 
 ---
 
