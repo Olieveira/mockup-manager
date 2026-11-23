@@ -79,6 +79,18 @@
   --shadow-raised: 0 1px 2px oklch(0 0 0 / 0.08), 0 12px 32px -8px oklch(0 0 0 / 0.22);
 
   --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Trecho que percorre a régua de carregamento enquanto o total é desconhecido */
+  --animate-ruler-scan: ruler-scan 1.4s var(--ease-snappy) infinite;
+
+  @keyframes ruler-scan {
+    from {
+      translate: -100% 0;
+    }
+    to {
+      translate: 340% 0;
+    }
+  }
 }
 
 @layer base {

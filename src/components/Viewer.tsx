@@ -18,6 +18,7 @@ import { MODEL_CATALOG, MODEL_IDS } from './scene/models/catalog'
 import { CropMarks } from './ui/CropMarks'
 import { IconButton } from './ui/IconButton'
 import { Notice } from './ui/Notice'
+import { StageProgress } from './ui/StageProgress'
 import { ToolButton } from './ui/ToolButton'
 
 const EXPORT_FILE_NAME = 'mockup.png'
@@ -124,7 +125,7 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
       >
         <CropMarks />
         <div className="absolute inset-0 overflow-hidden bg-sunken">
-          <Suspense fallback={null}>
+          <Suspense fallback={<StageProgress placement="center" label="Preparando o visualizador" />}>
             <Scene
               ref={sceneRef}
               model={model}

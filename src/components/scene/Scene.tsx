@@ -2,10 +2,13 @@ import { Suspense, useCallback, useDeferredValue, useEffect, useImperativeHandle
 import type { Ref } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Environment, OrbitControls, useTexture } from '@react-three/drei'
+import { ENVIRONMENT_PRESETS } from '../../config/scene'
 import type { EnvironmentPreset, SceneSettings } from '../../config/scene'
-import { MODEL_IDS } from './models/catalog'
+import { StageProgress } from '../ui/StageProgress'
+import { MODEL_CATALOG, MODEL_IDS } from './models/catalog'
 import type { ModelId } from './models/catalog'
 import { MODEL_COMPONENTS, preloadModel } from './models'
+import { useLoadingProgress } from './useLoadingProgress'
 
 type Vector3Tuple = [number, number, number]
 
@@ -84,15 +87,26 @@ function ReadySignal({ onReady }: { onReady: () => void }) {
   return null
 }
 
+/** O que mudou e ainda está carregando, enquanto a cena anterior segue na tela. */
+type PendingChange = 'model' | 'environment' | 'artwork' | null
+
 interface SceneContentProps {
   model: ModelId
   artworkUrl: string | null
   environment: EnvironmentPreset
   showEnvironment: boolean
   onReady: () => void
+  onPendingChange: (pending: PendingChange) => void
 }
 
-function SceneContent({ model, artworkUrl, environment, showEnvironment, onReady }: SceneContentProps) {
+function SceneContent({
+  model,
+  artworkUrl,
+  environment,
+  showEnvironment,
+  onReady,
+  onPendingChange,
+}: SceneContentProps) {
   // Os valores adiados precisam ficar dentro do Canvas: o R3F renderiza os
   // filhos com o próprio reconciler, e só assim a troca que ainda está
   // baixando mantém a cena anterior na tela em vez de esvaziá-la
@@ -100,6 +114,17 @@ function SceneContent({ model, artworkUrl, environment, showEnvironment, onReady
   const deferredArtworkUrl = useDeferredValue(artworkUrl)
   const deferredEnvironment = useDeferredValue(environment)
   const Model = MODEL_COMPONENTS[deferredModel]
+
+  const pending: PendingChange =
+    model !== deferredModel
+      ? 'model'
+      : environment !== deferredEnvironment
+        ? 'environment'
+        : artworkUrl !== deferredArtworkUrl
+          ? 'artwork'
+          : null
+
+  useEffect(() => onPendingChange(pending), [pending, onPendingChange])
 
   // Tira a arte enviada do cache só quando a cena já passou para a próxima.
   // Antes disso, uma renderização com o valor antigo ainda pode lê-la, e a
@@ -131,6 +156,8 @@ export default function Scene({ ref, model, artworkUrl, settings, onReady }: Sce
   )
   const [isReady, setIsReady] = useState(false)
   const markReady = useCallback(() => setIsReady(true), [])
+  const [pending, setPending] = useState<PendingChange>(null)
+  const progress = useLoadingProgress()
 
   useEffect(() => {
     if (isReady) onReady?.()
@@ -143,28 +170,40 @@ export default function Scene({ ref, model, artworkUrl, settings, onReady }: Sce
     return whenIdle(() => MODEL_IDS.forEach((id) => preloadModel(id).catch(() => {})))
   }, [isReady])
 
+  const pendingLabel = {
+    model: `Carregando ${MODEL_CATALOG[model].label.toLowerCase()}`,
+    environment: `Carregando cenário ${ENVIRONMENT_PRESETS.find(({ id }) => id === settings.environment)?.label}`,
+    artwork: 'Aplicando a arte',
+  }
+
   return (
-    <Canvas dpr={[1, 2]} gl={{ alpha: false }} camera={{ position: cameraPosition, fov: CAMERA_FOV }}>
-      <ClearColor color={settings.backgroundColor} />
-      <SceneCapture ref={ref} />
+    <>
+      <Canvas dpr={[1, 2]} gl={{ alpha: false }} camera={{ position: cameraPosition, fov: CAMERA_FOV }}>
+        <ClearColor color={settings.backgroundColor} />
+        <SceneCapture ref={ref} />
 
-      <SceneContent
-        model={model}
-        artworkUrl={artworkUrl}
-        environment={settings.environment}
-        showEnvironment={settings.backgroundMode === 'preset'}
-        onReady={markReady}
-      />
+        <SceneContent
+          model={model}
+          artworkUrl={artworkUrl}
+          environment={settings.environment}
+          showEnvironment={settings.backgroundMode === 'preset'}
+          onReady={markReady}
+          onPendingChange={setPending}
+        />
 
-      <OrbitControls
-        autoRotate={settings.autoRotate}
-        autoRotateSpeed={settings.rotateSpeed}
-        rotateSpeed={0.6}
-        zoomSpeed={0.5}
-        dampingFactor={0.1}
-        enablePan={false}
-        maxPolarAngle={Math.PI / 2}
-      />
-    </Canvas>
+        <OrbitControls
+          autoRotate={settings.autoRotate}
+          autoRotateSpeed={settings.rotateSpeed}
+          rotateSpeed={0.6}
+          zoomSpeed={0.5}
+          dampingFactor={0.1}
+          enablePan={false}
+          maxPolarAngle={Math.PI / 2}
+        />
+      </Canvas>
+
+      <StageProgress placement="center" label="Carregando a cena" {...progress} hidden={isReady} />
+      {isReady && pending && <StageProgress placement="corner" label={pendingLabel[pending]} {...progress} />}
+    </>
   )
 }
