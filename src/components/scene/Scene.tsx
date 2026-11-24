@@ -2,7 +2,7 @@ import { Suspense, useCallback, useDeferredValue, useEffect, useImperativeHandle
 import type { Ref } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Environment, OrbitControls, useTexture } from '@react-three/drei'
-import { ENVIRONMENT_PRESETS } from '../../config/scene'
+import { getEnvironmentPreset } from '../../config/scene'
 import type { EnvironmentPreset, SceneSettings } from '../../config/scene'
 import { StageProgress } from '../ui/StageProgress'
 import { MODEL_CATALOG, MODEL_IDS } from './models/catalog'
@@ -136,7 +136,7 @@ function SceneContent({
 
   return (
     <Suspense fallback={null}>
-      <Environment preset={deferredEnvironment} background={showEnvironment} />
+      <Environment files={getEnvironmentPreset(deferredEnvironment).url} background={showEnvironment} />
       {LIGHT_POSITIONS.map((position) => (
         <directionalLight key={position.join()} position={position} intensity={LIGHT_INTENSITY} />
       ))}
@@ -172,7 +172,7 @@ export default function Scene({ ref, model, artworkUrl, settings, onReady }: Sce
 
   const pendingLabel = {
     model: `Carregando ${MODEL_CATALOG[model].label.toLowerCase()}`,
-    environment: `Carregando cenário ${ENVIRONMENT_PRESETS.find(({ id }) => id === settings.environment)?.label}`,
+    environment: `Carregando cenário ${getEnvironmentPreset(settings.environment).label}`,
     artwork: 'Aplicando a arte',
   }
 
