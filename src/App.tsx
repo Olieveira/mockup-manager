@@ -30,9 +30,11 @@ export function App() {
   }, [])
 
   return (
-    <div className="flex h-dvh flex-col">
+    // Deitado, a página vira uma grade de duas colunas (conteúdo e trilho de
+    // ações) e o <main> e o Viewer cedem os filhos a ela com display: contents
+    <div className="flex h-dvh flex-col landscape-short:grid landscape-short:grid-cols-[minmax(0,1fr)_auto] landscape-short:grid-rows-[auto_minmax(0,1fr)]">
       <Header />
-      <main className="flex min-h-0 flex-1 flex-col">
+      <main className="flex min-h-0 flex-1 flex-col landscape-short:contents">
         <Viewer
           settings={settings}
           onToggleAutoRotate={() => updateSettings({ autoRotate: !settings.autoRotate })}

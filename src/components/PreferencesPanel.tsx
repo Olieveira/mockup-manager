@@ -40,8 +40,8 @@ const swatch =
 /**
  * Ajustes da cena em um <dialog> nativo, que já cuida do foco preso, do Esc e
  * de devolver o foco ao botão que o abriu. Fica ao lado da cena (folha
- * inferior no celular) e não escurece o fundo, para as mudanças aparecerem ao
- * vivo no mockup.
+ * inferior no celular, altura toda sobre o trilho quando deitado) e não
+ * escurece o fundo, para as mudanças aparecerem ao vivo no mockup.
  */
 export function PreferencesPanel({ open, settings, onChange, onClose }: PreferencesPanelProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -63,7 +63,7 @@ export function PreferencesPanel({ open, settings, onChange, onClose }: Preferen
       onClose={onClose}
       // Clique fora do painel cai no próprio <dialog> (área do backdrop)
       onClick={(event) => event.target === event.currentTarget && onClose()}
-      className="m-0 bg-surface p-0 text-ink shadow-raised transition-[opacity,translate,display,overlay] transition-discrete duration-200 ease-snappy backdrop:bg-transparent open:translate-x-0 open:translate-y-0 open:opacity-100 max-sm:inset-x-0 max-sm:top-auto max-sm:bottom-0 max-sm:max-h-[75dvh] max-sm:w-full max-sm:max-w-none max-sm:translate-y-full max-sm:rounded-t-panel max-sm:border-t max-sm:border-line max-sm:starting:open:translate-y-full sm:top-[calc(4.25rem+env(safe-area-inset-top))] sm:right-[max(--spacing(4),env(safe-area-inset-right))] sm:bottom-auto sm:left-auto sm:max-h-[calc(100dvh-5.25rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] sm:w-88 sm:translate-x-3 sm:rounded-panel sm:border sm:border-line sm:opacity-0 sm:starting:open:translate-x-3 sm:starting:open:opacity-0"
+      className="m-0 bg-surface p-0 text-ink shadow-raised transition-[opacity,translate,display,overlay] transition-discrete duration-200 ease-snappy backdrop:bg-transparent open:translate-x-0 open:translate-y-0 open:opacity-100 max-sm:inset-x-0 max-sm:top-auto max-sm:bottom-0 max-sm:max-h-[75dvh] max-sm:w-full max-sm:max-w-none max-sm:translate-y-full max-sm:rounded-t-panel max-sm:border-t max-sm:border-line max-sm:starting:open:translate-y-full sm:top-[calc(4.25rem+env(safe-area-inset-top))] sm:right-[max(--spacing(4),env(safe-area-inset-right))] sm:bottom-auto sm:left-auto sm:max-h-[calc(100dvh-5.25rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] sm:w-88 sm:translate-x-3 sm:rounded-panel sm:border sm:border-line sm:opacity-0 sm:starting:open:translate-x-3 sm:starting:open:opacity-0 landscape-short:top-2 landscape-short:max-h-[calc(100dvh-0.5rem-max(0.5rem,env(safe-area-inset-bottom)))]"
     >
       <div className="flex flex-col">
         <div className="flex items-center justify-between py-2 pr-2 pl-5">
@@ -73,7 +73,7 @@ export function PreferencesPanel({ open, settings, onChange, onClose }: Preferen
           <IconButton label="Fechar" icon={<PiX aria-hidden />} onClick={onClose} tooltipSide="left" />
         </div>
 
-        <div className="flex flex-col gap-5 border-y border-line px-5 py-4 sm:gap-6 sm:py-5">
+        <div className="flex flex-col gap-5 border-y border-line px-5 py-4 sm:gap-6 sm:py-5 landscape-short:gap-5 landscape-short:py-4">
           <Section title="Rotação">
             <Switch
               label="Girar automaticamente"
@@ -160,7 +160,7 @@ export function PreferencesPanel({ open, settings, onChange, onClose }: Preferen
         </div>
 
         {/* Na folha inferior, o botão fica acima da barra de início do iPhone */}
-        <div className="px-5 pt-3 pb-safe-3 sm:py-4">
+        <div className="px-5 pt-3 pb-safe-3 sm:py-4 landscape-short:py-3">
           <button
             type="button"
             onClick={onClose}

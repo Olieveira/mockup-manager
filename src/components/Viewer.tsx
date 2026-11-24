@@ -98,9 +98,10 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
   return (
     <section
       aria-label="Mockup"
-      className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 px-safe-4 pt-2 pb-safe-4 sm:px-safe-6 sm:pt-3 sm:pb-safe-5"
+      className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 px-safe-4 pt-2 pb-safe-4 sm:px-safe-6 sm:pt-3 sm:pb-safe-5 landscape-short:contents"
     >
-      <div className="flex h-10 shrink-0 items-center justify-between gap-4">
+      {/* Deitado, o seletor fica no meio da barra do cabeçalho */}
+      <div className="flex h-10 shrink-0 items-center justify-between gap-4 landscape-short:z-10 landscape-short:col-start-1 landscape-short:row-start-1 landscape-short:self-center landscape-short:justify-self-center">
         <div className="-ml-2 flex items-center">
           <IconButton label="Mockup anterior" icon={<PiCaretLeft aria-hidden />} onClick={() => stepModel(-1)} tooltipSide="bottom" />
           <p aria-live="polite" className="flex min-w-28 items-baseline justify-center gap-2 px-2">
@@ -112,13 +113,13 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
           </p>
           <IconButton label="Próximo mockup" icon={<PiCaretRight aria-hidden />} onClick={() => stepModel(1)} tooltipSide="bottom" />
         </div>
-        <p className="hidden text-sm text-ink-muted pointer-fine:block">
+        <p className="hidden text-sm text-ink-muted pointer-fine:block landscape-short:hidden">
           {isProcessing ? 'Preparando a arte…' : 'Arraste uma imagem PNG, JPG ou WebP até a cena'}
         </p>
       </div>
 
       <div
-        className="relative min-h-0 flex-1"
+        className="relative min-h-0 flex-1 landscape-short:col-start-1 landscape-short:row-start-2 landscape-short:mt-3 landscape-short:mr-3 landscape-short:mb-[max(--spacing(3),env(safe-area-inset-bottom))] landscape-short:ml-[max(--spacing(4),env(safe-area-inset-left))]"
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={(event) => event.preventDefault()}
@@ -148,8 +149,8 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
         <Notice message={error ?? exportError} onDismiss={dismissErrors} />
       </div>
 
-      <div className="flex shrink-0 gap-1 sm:justify-between sm:gap-2">
-        <div className="flex gap-2 max-sm:contents">
+      <div className="flex shrink-0 gap-1 sm:justify-between sm:gap-2 landscape-short:col-start-2 landscape-short:row-span-2 landscape-short:row-start-1 landscape-short:flex-col landscape-short:border-l landscape-short:border-line landscape-short:bg-chrome landscape-short:pt-2 landscape-short:pb-safe-2 landscape-short:pl-2 landscape-short:pr-[max(--spacing(2),env(safe-area-inset-right))]">
+        <div className="flex gap-2 max-sm:contents landscape-short:flex-col landscape-short:gap-1">
           <ToolButton
             label="Girar"
             icon={<PiArrowsClockwise />}
@@ -158,7 +159,7 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
           />
           <ToolButton label="Ajustes" icon={<PiSlidersHorizontal />} onClick={onOpenPreferences} />
         </div>
-        <div className="flex gap-2 max-sm:contents">
+        <div className="flex gap-2 max-sm:contents landscape-short:flex-col landscape-short:gap-1">
           <ToolButton
             label="Trocar arte"
             shortLabel="Arte"
