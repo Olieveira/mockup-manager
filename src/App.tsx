@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AnimatePresence } from 'motion/react'
 import { Header } from './components/Header'
-import { PreferencesModal } from './components/PreferencesModal'
+import { PreferencesPanel } from './components/PreferencesPanel'
 import { Viewer } from './components/Viewer'
 import { DEFAULT_SCENE_SETTINGS } from './config/scene'
 import type { SceneSettings } from './config/scene'
@@ -31,20 +30,21 @@ export function App() {
   }, [])
 
   return (
-    <div className="flex min-h-dvh flex-col bg-linear-to-br from-gray-800 to-slate-950">
+    <div className="flex h-dvh flex-col">
       <Header />
-      <main className="flex flex-1 justify-center p-2">
+      <main className="flex min-h-0 flex-1 flex-col">
         <Viewer
           settings={settings}
           onToggleAutoRotate={() => updateSettings({ autoRotate: !settings.autoRotate })}
           onOpenPreferences={() => setIsPreferencesOpen(true)}
         />
       </main>
-      <AnimatePresence>
-        {isPreferencesOpen && (
-          <PreferencesModal settings={settings} onChange={updateSettings} onClose={closePreferences} />
-        )}
-      </AnimatePresence>
+      <PreferencesPanel
+        open={isPreferencesOpen}
+        settings={settings}
+        onChange={updateSettings}
+        onClose={closePreferences}
+      />
     </div>
   )
 }

@@ -1,1 +1,137 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Tokens de cor. Os neutros não têm croma de propósito: assim como numa mesa
+ * de prova de gráfica, a interface fica em cinza neutro para não interferir na
+ * leitura das cores da arte. Destaque e chrome vêm da marca
+ * (src/config/brand.ts, injetados como --brand-* no index.html).
+ */
+:root {
+  color-scheme: light;
+  --canvas: oklch(0.948 0 0);
+  --surface: oklch(0.985 0 0);
+  --sunken: oklch(0.91 0 0);
+  --ink: oklch(0.235 0 0);
+  --ink-muted: oklch(0.46 0 0);
+  --line: oklch(0.87 0 0);
+  --line-strong: oklch(0.6 0 0);
+  --fill-hover: oklch(0.235 0 0 / 0.06);
+  --fill-pressed: oklch(0.235 0 0 / 0.11);
+  --danger: oklch(0.5 0.18 27);
+  --danger-surface: oklch(0.96 0.025 27);
+  --danger-line: oklch(0.82 0.08 27);
+}
+
+.dark {
+  color-scheme: dark;
+  --canvas: oklch(0.205 0 0);
+  --surface: oklch(0.245 0 0);
+  --sunken: oklch(0.17 0 0);
+  --ink: oklch(0.94 0 0);
+  --ink-muted: oklch(0.72 0 0);
+  --line: oklch(0.33 0 0);
+  --line-strong: oklch(0.56 0 0);
+  --fill-hover: oklch(0.94 0 0 / 0.07);
+  --fill-pressed: oklch(0.94 0 0 / 0.14);
+  --danger: oklch(0.75 0.14 25);
+  --danger-surface: oklch(0.27 0.04 25);
+  --danger-line: oklch(0.45 0.1 25);
+}
+
+/* O reset precisa vir antes dos tokens, senão também os apaga */
+@theme {
+  /* Sem a paleta, os raios e as sombras padrão do Tailwind: só os tokens deste
+     arquivo existem, então uma cor solta (bg-blue-600) nem chega a ser gerada */
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-chrome: var(--brand-chrome);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fill-hover: var(--fill-hover);
+  --color-fill-pressed: var(--fill-pressed);
+  --color-accent: var(--brand-accent);
+  --color-on-accent: var(--brand-on-accent);
+  --color-danger: var(--danger);
+  --color-danger-surface: var(--danger-surface);
+  --color-danger-line: var(--danger-line);
+}
+
+@theme {
+  --font-sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Raio por função, não um valor único para tudo */
+  --radius-inner: 4px;
+  --radius-control: 6px;
+  --radius-panel: 12px;
+
+  /* Sombra só para o que flutua de verdade (painel e dicas) */
+  --shadow-raised: 0 1px 2px oklch(0 0 0 / 0.08), 0 12px 32px -8px oklch(0 0 0 / 0.22);
+
+  --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Trecho que percorre a régua de carregamento enquanto o total é desconhecido */
+  --animate-ruler-scan: ruler-scan 1.4s var(--ease-snappy) infinite;
+
+  @keyframes ruler-scan {
+    from {
+      translate: -100% 0;
+    }
+    to {
+      translate: 340% 0;
+    }
+  }
+}
+
+/*
+ * Espaçamento que respeita a safe area do iPhone (notch, cantos e barra de
+ * início). Com viewport-fit=cover a página ocupa a tela toda, então as bordas
+ * usam o maior valor entre o respiro normal e a área ocupada pelo aparelho.
+ * Ex.: px-safe-4 = no mínimo 1rem de cada lado.
+ */
+@utility px-safe-* {
+  padding-left: max(calc(var(--spacing) * --value(number)), env(safe-area-inset-left));
+  padding-right: max(calc(var(--spacing) * --value(number)), env(safe-area-inset-right));
+}
+
+@utility pb-safe-* {
+  padding-bottom: max(calc(var(--spacing) * --value(number)), env(safe-area-inset-bottom));
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+@layer base {
+  html {
+    background-color: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useTexture } from '@react-three/drei'
 import { ArtworkError, prepareArtwork } from '../lib/artwork'
 
 /**
@@ -12,12 +11,11 @@ export function useArtwork() {
   const [isProcessing, setIsProcessing] = useState(false)
   const lastRequest = useRef(0)
 
+  // O cache da textura é limpo pela cena (ver SceneContent), para este hook
+  // não puxar o drei para o pacote inicial
   useEffect(() => {
     if (!artworkUrl) return
-    return () => {
-      useTexture.clear(artworkUrl)
-      URL.revokeObjectURL(artworkUrl)
-    }
+    return () => URL.revokeObjectURL(artworkUrl)
   }, [artworkUrl])
 
   const selectArtwork = useCallback(async (file: File) => {
