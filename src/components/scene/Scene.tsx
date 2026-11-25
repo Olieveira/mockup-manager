@@ -1,9 +1,11 @@
-import { Suspense, useCallback, useDeferredValue, useEffect, useImperativeHandle, useState } from 'react'
+import { Suspense, useCallback, useDeferredValue, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import type { Ref } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
-import { Environment, OrbitControls, useTexture } from '@react-three/drei'
+import { ContactShadows, Environment, OrbitControls, useTexture } from '@react-three/drei'
+import { Box3 } from 'three'
+import type { Group } from 'three'
 import { getEnvironmentPreset } from '../../config/scene'
-import type { EnvironmentPreset, SceneSettings } from '../../config/scene'
+import type { EnvironmentPreset, LightingSettings, SceneSettings } from '../../config/scene'
 import { StageProgress } from '../ui/StageProgress'
 import { MODEL_CATALOG, MODEL_IDS } from './models/catalog'
 import type { ModelId } from './models/catalog'
@@ -21,6 +23,11 @@ const LIGHT_POSITIONS: Vector3Tuple[] = [
   [100, 100, 100],
   [-100, 100, 100],
 ]
+const DEG_TO_RAD = Math.PI / 180
+const SHADOW_OPACITY = 0.5
+const SHADOW_BLUR = 2.5
+/** Folga do chão da sombra além do ponto do modelo mais longe do centro, para o desfoque não ser cortado. */
+const SHADOW_MARGIN = 1.5
 
 export interface SceneHandle {
   /** Renderiza o quadro atual e o devolve como imagem PNG. */
@@ -47,16 +54,44 @@ function whenIdle(callback: () => void) {
   return () => clearTimeout(id)
 }
 
-function ClearColor({ color }: { color: string }) {
-  const gl = useThree((state) => state.gl)
-  const invalidate = useThree((state) => state.invalidate)
-
+/** Exposição do tone mapping, que fica no renderer e não na cena. */
+function Exposure({ exposure }: { exposure: number }) {
+  // get() lê o renderer na hora, para alterá-lo fora do ciclo de renderização
+  const get = useThree((state) => state.get)
   useEffect(() => {
-    gl.setClearColor(color)
-    invalidate()
-  }, [gl, invalidate, color])
+    get().gl.toneMappingExposure = 2 ** exposure
+    get().invalidate()
+  }, [get, exposure])
 
   return null
+}
+
+/**
+ * Sombra suave no chão, logo abaixo do modelo. É desenhada uma vez só
+ * (frames=1) e de novo apenas quando o modelo muda: o giro move a câmera, não
+ * o modelo, então a sombra continua certa e não custa nada com a cena parada.
+ *
+ * Fica centrada em x = z = 0, e não no centro do modelo: o desfoque do drei
+ * desenha um plano auxiliar na origem com a câmera da sombra, e com a sombra
+ * fora do eixo a textura sai deslocada e cortada. Os modelos já ficam em
+ * volta da origem (é para onde a câmera olha), com a base abaixo dela.
+ */
+function ModelShadow({ bounds }: { bounds: Box3 }) {
+  const { position, scale, far } = useMemo(() => {
+    const height = bounds.max.y - bounds.min.y
+    const reach = Math.max(-bounds.min.x, bounds.max.x, -bounds.min.z, bounds.max.z)
+    return {
+      // Um pouco abaixo da base, para o plano não disputar pixel com ela
+      position: [0, bounds.min.y - height * 0.002, 0] as Vector3Tuple,
+      scale: reach * 2 * SHADOW_MARGIN,
+      // O plano auxiliar do desfoque (em y = 0) precisa caber no alcance da câmera
+      far: Math.max(height, -bounds.min.y),
+    }
+  }, [bounds])
+
+  return (
+    <ContactShadows frames={1} position={position} scale={scale} far={far} blur={SHADOW_BLUR} opacity={SHADOW_OPACITY} />
+  )
 }
 
 function SceneCapture({ ref }: { ref?: Ref<SceneHandle> }) {
@@ -97,6 +132,7 @@ interface SceneContentProps {
   artworkUrl: string | null
   environment: EnvironmentPreset
   showEnvironment: boolean
+  lighting: LightingSettings
   onReady: () => void
   onPendingChange: (pending: PendingChange) => void
 }
@@ -106,9 +142,11 @@ function SceneContent({
   artworkUrl,
   environment,
   showEnvironment,
+  lighting,
   onReady,
   onPendingChange,
 }: SceneContentProps) {
+  const { backgroundBlur, environmentIntensity, environmentRotation, lightIntensity, contactShadow } = lighting
   // Os valores adiados precisam ficar dentro do Canvas: o R3F renderiza os
   // filhos com o próprio reconciler, e só assim a troca que ainda está
   // baixando mantém a cena anterior na tela em vez de esvaziá-la
@@ -117,6 +155,14 @@ function SceneContent({
   const deferredEnvironment = useDeferredValue(environment)
   const Model = MODEL_COMPONENTS[deferredModel]
   const invalidate = useThree((state) => state.invalidate)
+  const rotation = useMemo<Vector3Tuple>(() => [0, environmentRotation * DEG_TO_RAD, 0], [environmentRotation])
+  const [modelBounds, setModelBounds] = useState<Box3 | null>(null)
+
+  // Mede o modelo quando ele entra na cena (o grupo é recriado a cada troca),
+  // para a sombra ficar logo abaixo da base de qualquer modelo do catálogo
+  const measureModel = useCallback((group: Group | null) => {
+    if (group) setModelBounds(new Box3().setFromObject(group))
+  }, [])
 
   const pending: PendingChange =
     model !== deferredModel
@@ -131,7 +177,10 @@ function SceneContent({
 
   // O <Environment> muda a cena direto, sem passar pelo reconciler do R3F,
   // então o quadro novo precisa ser pedido aqui (os efeitos dele já rodaram)
-  useEffect(() => invalidate(), [invalidate, deferredEnvironment, showEnvironment])
+  useEffect(
+    () => invalidate(),
+    [invalidate, deferredEnvironment, showEnvironment, backgroundBlur, environmentIntensity, rotation],
+  )
 
   // Tira a arte enviada do cache só quando a cena já passou para a próxima.
   // Antes disso, uma renderização com o valor antigo ainda pode lê-la, e a
@@ -143,11 +192,22 @@ function SceneContent({
 
   return (
     <Suspense fallback={null}>
-      <Environment files={getEnvironmentPreset(deferredEnvironment).url} background={showEnvironment} />
+      <Environment
+        files={getEnvironmentPreset(deferredEnvironment).url}
+        background={showEnvironment}
+        backgroundBlurriness={backgroundBlur}
+        environmentIntensity={environmentIntensity}
+        backgroundIntensity={environmentIntensity}
+        environmentRotation={rotation}
+        backgroundRotation={rotation}
+      />
       {LIGHT_POSITIONS.map((position) => (
-        <directionalLight key={position.join()} position={position} intensity={LIGHT_INTENSITY} />
+        <directionalLight key={position.join()} position={position} intensity={LIGHT_INTENSITY * lightIntensity} />
       ))}
-      <Model artworkUrl={deferredArtworkUrl} />
+      <group key={deferredModel} ref={measureModel}>
+        <Model artworkUrl={deferredArtworkUrl} />
+      </group>
+      {contactShadow && modelBounds && <ModelShadow bounds={modelBounds} />}
       <ReadySignal onReady={onReady} />
     </Suspense>
   )
@@ -188,8 +248,21 @@ export default function Scene({ ref, model, artworkUrl, settings, onReady }: Sce
       {/* Sob demanda: com a cena parada nada é redesenhado. Arrastar, o giro
           automático e as mudanças de props pedem quadros novos sozinhos; o
           que mexe direto no renderer ou na cena chama invalidate() */}
-      <Canvas frameloop="demand" dpr={[1, 2]} gl={{ alpha: false }} camera={{ position: cameraPosition, fov: CAMERA_FOV }}>
-        <ClearColor color={settings.backgroundColor} />
+      <Canvas
+        frameloop="demand"
+        dpr={[1, 2]}
+        gl={{ alpha: false }}
+        camera={{ position: cameraPosition, fov: CAMERA_FOV }}
+        // Sem alpha no canvas, o three limpa opaco; a textura da sombra precisa
+        // começar transparente (a tela não muda, ela não tem canal alpha)
+        onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
+      >
+        {/* A cor sólida é o fundo da cena, e não a cor de limpeza do renderer:
+            a sombra de contato desenha numa textura à parte que precisa ser
+            limpa transparente. No modo cenário o <Environment> troca este
+            fundo pelo HDRI e devolve a cor quando sai */}
+        <color attach="background" args={[settings.backgroundColor]} />
+        <Exposure exposure={settings.exposure} />
         <SceneCapture ref={ref} />
 
         <SceneContent
@@ -197,6 +270,7 @@ export default function Scene({ ref, model, artworkUrl, settings, onReady }: Sce
           artworkUrl={artworkUrl}
           environment={settings.environment}
           showEnvironment={settings.backgroundMode === 'preset'}
+          lighting={settings}
           onReady={markReady}
           onPendingChange={setPending}
         />

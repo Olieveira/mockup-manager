@@ -27,12 +27,37 @@ export function getEnvironmentPreset(id: EnvironmentPreset) {
 
 export type BackgroundMode = 'preset' | 'color'
 
-export interface SceneSettings {
+/** Ajustes finos de luz e fundo. São os valores que o "Restaurar padrão" do painel desfaz. */
+export interface LightingSettings {
+  /** Desfoque do fundo do cenário, de 0 (nítido) a 1. */
+  backgroundBlur: number
+  /** Multiplica a luz do cenário, tanto nos reflexos quanto no fundo. */
+  environmentIntensity: number
+  /** Giro do cenário em graus, reflexos e fundo juntos. */
+  environmentRotation: number
+  /** Exposição em EV: cada ponto dobra ou divide a luz pela metade. */
+  exposure: number
+  /** Multiplica a intensidade das luzes direcionais. */
+  lightIntensity: number
+  /** Sombra suave no chão, logo abaixo do modelo. */
+  contactShadow: boolean
+}
+
+export interface SceneSettings extends LightingSettings {
   backgroundMode: BackgroundMode
   backgroundColor: string
   environment: EnvironmentPreset
   autoRotate: boolean
   rotateSpeed: number
+}
+
+export const DEFAULT_LIGHTING: LightingSettings = {
+  backgroundBlur: 0,
+  environmentIntensity: 1,
+  environmentRotation: 0,
+  exposure: 0,
+  lightIntensity: 1,
+  contactShadow: true,
 }
 
 export const DEFAULT_SCENE_SETTINGS: SceneSettings = {
@@ -41,6 +66,13 @@ export const DEFAULT_SCENE_SETTINGS: SceneSettings = {
   environment: 'apartment',
   autoRotate: false,
   rotateSpeed: 3,
+  ...DEFAULT_LIGHTING,
+}
+
+export function isDefaultLighting(settings: LightingSettings) {
+  return (Object.keys(DEFAULT_LIGHTING) as (keyof LightingSettings)[]).every(
+    (key) => settings[key] === DEFAULT_LIGHTING[key],
+  )
 }
 
 /**
@@ -57,3 +89,12 @@ export const BACKGROUND_SWATCHES = [
 ] as const
 
 export const ROTATE_SPEED_RANGE = { min: 1, max: 15, step: 1 } as const
+
+/** Limites dos controles deslizantes de luz e fundo, no formato de <input type="range">. */
+export const LIGHTING_RANGES = {
+  backgroundBlur: { min: 0, max: 1, step: 0.05 },
+  environmentIntensity: { min: 0, max: 2, step: 0.05 },
+  environmentRotation: { min: 0, max: 355, step: 5 },
+  exposure: { min: -2, max: 2, step: 0.1 },
+  lightIntensity: { min: 0, max: 2, step: 0.05 },
+} as const satisfies Partial<Record<keyof LightingSettings, { min: number; max: number; step: number }>>
