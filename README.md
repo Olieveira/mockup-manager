@@ -10,7 +10,8 @@
 - Upload de **imagem personalizada** (PNG, JPG ou WebP) pelo botão ou arrastando o arquivo para a cena
 - **Exportação da cena atual** como imagem PNG (em celulares abre o compartilhamento nativo)
 - **Controle de rotação** automática e velocidade
-- Escolha de **cor de fundo sólida** ou ambiente HDRI (cidade, estúdio, etc.)
+- Escolha de **cor de fundo sólida** ou ambiente HDRI (cidade, estúdio, etc.), com desfoque opcional do fundo
+- **Controles de luz**: intensidade e rotação do cenário, exposição, luz principal e sombra de contato sob o modelo, com botão para restaurar o padrão. Tudo sai igual na imagem exportada
 - **Tema claro, escuro ou do sistema**, com a escolha salva no navegador
 - Interface adaptável e responsiva, navegável pelo teclado
 
@@ -30,15 +31,15 @@
 
 ## Estrutura do Projeto
 
-- `src/components/`: componentes da interface (header, viewer, painel de ajustes, seletor de tema, aviso de falha da cena)
-- `src/components/ui/`: componentes reutilizáveis (botões, dicas, avisos, controles, régua de carregamento)
+- `src/components/`: componentes da interface (header, viewer, seletor de modelo, painel de ajustes, seletor de tema, aviso de falha da cena)
+- `src/components/ui/`: componentes reutilizáveis (botões, dicas, avisos, controles deslizantes, régua de carregamento)
 - `src/components/brand/`: slot do logo
 - `src/components/scene/`: cena 3D, textura da arte e progresso de carregamento
 - `src/components/scene/models/`: modelos 3D (Blister, Caneca), nome e ordem em `catalog.ts` e carregamento sob demanda em `index.ts`
-- `src/config/`: marca (`brand.ts`), tema, opções iniciais da cena e lista de cenários HDRI (`scene.ts`)
+- `src/config/`: marca (`brand.ts`), tema, opções iniciais da cena, padrões e limites da luz e lista de cenários HDRI (`scene.ts`) e a media query do celular deitado (`layout.ts`)
 - `src/hooks/`: hooks da aplicação
 - `src/lib/`: funções sem React (processamento da arte, exportação, tema)
-- `src/index.css`: tokens de cor, raio, sombra e tipografia, utilitários de safe area (`px-safe-*`, `pb-safe-*`, `pt-safe`) e a variante `landscape-short:` para celular deitado
+- `src/index.css`: tokens de cor, raio, sombra e tipografia, utilitários de safe area (`px-safe-*`, `pb-safe-*`, `pt-safe`) e a variante `landscape-short:` para celular deitado (a mesma query fica em `config/layout.ts`; mantenha as duas iguais)
 - `vite/`: plugin que preenche o `index.html` com os dados da marca
 - `public/`: assets estáticos e modelos `.glb`
 - `public/hdri/`: cenários HDRI (`.hdr` em 1k)
@@ -106,14 +107,15 @@ Outros scripts:
 - Os cenários HDRI são servidos pelo próprio app, de `public/hdri/`, e só baixam quando escolhidos. São os mesmos dos presets do drei, da [Poly Haven](https://polyhaven.com/) (CC0). Para incluir outro, coloque o `.hdr` na pasta e adicione o nome em `ENVIRONMENT_PRESETS`.
 - A cena 3D (three, R3F e drei) e cada modelo ficam em chunks separados, baixados depois que a interface aparece. O pacote inicial tem cerca de 80KB com gzip. Depois que a primeira cena fica pronta, os outros modelos são baixados em segundo plano.
 - Ao trocar de modelo, cenário ou arte, a cena anterior continua na tela até a nova carregar, com o progresso num canto do palco.
-- Com o celular deitado (paisagem com até 500px de altura), o seletor de modelo sobe para a barra do cabeçalho e as ações viram um trilho vertical à direita, para o palco ganhar altura.
+- Com o celular deitado (paisagem com até 500px de altura), o seletor de modelo sobe para a barra do cabeçalho e as ações viram um trilho vertical à direita, para o palco ganhar altura. O seletor muda de lugar no DOM, e não só na tela, para a ordem do Tab seguir a ordem visual.
+- A cena só é redesenhada quando algo muda (arrastar, giro automático, troca de modelo, cenário, arte ou ajuste). Parada, ela não gasta GPU nem bateria. Código que altera o renderer ou a cena fora dos componentes do R3F precisa chamar `invalidate()`.
+- A sombra de contato é desenhada uma vez por modelo e acompanha a base dele pelo tamanho medido na cena. Ela fica centrada no eixo da cena, então novos modelos devem ficar em volta da origem com a base abaixo dela.
 
 ---
 
 ## Próximos passos
 
 - Integração com sistema de vendas (mockups vinculados a produtos)
-- Possibilidade de controlar iluminação
 - Possibilidade de salvar e carregar predefinições de cenas
 - Suporte a outros modelos além de blister e caneca
 - Galeria de cenas geradas

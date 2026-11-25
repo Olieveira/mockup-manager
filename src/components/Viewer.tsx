@@ -1,10 +1,8 @@
 import { lazy, Suspense, useCallback, useRef, useState } from 'react'
-import type { ChangeEvent, DragEvent } from 'react'
+import type { ChangeEvent, DragEvent, ReactNode } from 'react'
 import {
   PiArrowCounterClockwise,
   PiArrowsClockwise,
-  PiCaretLeft,
-  PiCaretRight,
   PiDownloadSimple,
   PiImageSquare,
   PiSlidersHorizontal,
@@ -15,9 +13,8 @@ import { ACCEPTED_ARTWORK_TYPES } from '../lib/artwork'
 import { saveImage } from '../lib/saveImage'
 import { StageErrorBoundary } from './StageErrorBoundary'
 import type { SceneHandle } from './scene/Scene'
-import { MODEL_CATALOG, MODEL_IDS } from './scene/models/catalog'
+import type { ModelId } from './scene/models/catalog'
 import { CropMarks } from './ui/CropMarks'
-import { IconButton } from './ui/IconButton'
 import { Notice } from './ui/Notice'
 import { StageProgress } from './ui/StageProgress'
 import { ToolButton } from './ui/ToolButton'
@@ -29,6 +26,9 @@ const EXPORT_FILE_NAME = 'mockup.png'
 const Scene = lazy(() => import('./scene/Scene'))
 
 interface ViewerProps {
+  model: ModelId
+  /** Seletor de modelo, quando ele fica acima do palco (fora do celular deitado). */
+  modelSelector: ReactNode
   settings: SceneSettings
   onToggleAutoRotate: () => void
   onOpenPreferences: () => void
@@ -38,8 +38,7 @@ function hasFiles(event: DragEvent) {
   return event.dataTransfer.types.includes('Files')
 }
 
-export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: ViewerProps) {
-  const [modelIndex, setModelIndex] = useState(0)
+export function Viewer({ model, modelSelector, settings, onToggleAutoRotate, onOpenPreferences }: ViewerProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
   const [isSceneReady, setIsSceneReady] = useState(false)
@@ -49,12 +48,7 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
   const sceneRef = useRef<SceneHandle>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const model = MODEL_IDS[modelIndex]
   const markSceneReady = useCallback(() => setIsSceneReady(true), [])
-
-  function stepModel(step: number) {
-    setModelIndex((index) => (index + step + MODEL_IDS.length) % MODEL_IDS.length)
-  }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -100,20 +94,9 @@ export function Viewer({ settings, onToggleAutoRotate, onOpenPreferences }: View
       aria-label="Mockup"
       className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 px-safe-4 pt-2 pb-safe-4 sm:px-safe-6 sm:pt-3 sm:pb-safe-5 landscape-short:contents"
     >
-      {/* Deitado, o seletor fica no meio da barra do cabeçalho */}
-      <div className="flex h-10 shrink-0 items-center justify-between gap-4 landscape-short:z-10 landscape-short:col-start-1 landscape-short:row-start-1 landscape-short:self-center landscape-short:justify-self-center">
-        <div className="-ml-2 flex items-center">
-          <IconButton label="Mockup anterior" icon={<PiCaretLeft aria-hidden />} onClick={() => stepModel(-1)} tooltipSide="bottom" />
-          <p aria-live="polite" className="flex min-w-28 items-baseline justify-center gap-2 px-2">
-            <span className="text-base font-semibold">{MODEL_CATALOG[model].label}</span>
-            <span className="text-sm text-ink-muted tabular-nums">
-              <span className="sr-only">modelo </span>
-              {modelIndex + 1} de {MODEL_IDS.length}
-            </span>
-          </p>
-          <IconButton label="Próximo mockup" icon={<PiCaretRight aria-hidden />} onClick={() => stepModel(1)} tooltipSide="bottom" />
-        </div>
-        <p className="hidden text-sm text-ink-muted pointer-fine:block landscape-short:hidden">
+      <div className="flex h-10 shrink-0 items-center justify-between gap-4 landscape-short:hidden">
+        {modelSelector}
+        <p className="hidden text-sm text-ink-muted pointer-fine:block">
           {isProcessing ? 'Preparando a arte…' : 'Arraste uma imagem PNG, JPG ou WebP até a cena'}
         </p>
       </div>
