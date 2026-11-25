@@ -49,10 +49,12 @@ function whenIdle(callback: () => void) {
 
 function ClearColor({ color }: { color: string }) {
   const gl = useThree((state) => state.gl)
+  const invalidate = useThree((state) => state.invalidate)
 
   useEffect(() => {
     gl.setClearColor(color)
-  }, [gl, color])
+    invalidate()
+  }, [gl, invalidate, color])
 
   return null
 }
@@ -114,6 +116,7 @@ function SceneContent({
   const deferredArtworkUrl = useDeferredValue(artworkUrl)
   const deferredEnvironment = useDeferredValue(environment)
   const Model = MODEL_COMPONENTS[deferredModel]
+  const invalidate = useThree((state) => state.invalidate)
 
   const pending: PendingChange =
     model !== deferredModel
@@ -125,6 +128,10 @@ function SceneContent({
           : null
 
   useEffect(() => onPendingChange(pending), [pending, onPendingChange])
+
+  // O <Environment> muda a cena direto, sem passar pelo reconciler do R3F,
+  // então o quadro novo precisa ser pedido aqui (os efeitos dele já rodaram)
+  useEffect(() => invalidate(), [invalidate, deferredEnvironment, showEnvironment])
 
   // Tira a arte enviada do cache só quando a cena já passou para a próxima.
   // Antes disso, uma renderização com o valor antigo ainda pode lê-la, e a
@@ -178,7 +185,10 @@ export default function Scene({ ref, model, artworkUrl, settings, onReady }: Sce
 
   return (
     <>
-      <Canvas dpr={[1, 2]} gl={{ alpha: false }} camera={{ position: cameraPosition, fov: CAMERA_FOV }}>
+      {/* Sob demanda: com a cena parada nada é redesenhado. Arrastar, o giro
+          automático e as mudanças de props pedem quadros novos sozinhos; o
+          que mexe direto no renderer ou na cena chama invalidate() */}
+      <Canvas frameloop="demand" dpr={[1, 2]} gl={{ alpha: false }} camera={{ position: cameraPosition, fov: CAMERA_FOV }}>
         <ClearColor color={settings.backgroundColor} />
         <SceneCapture ref={ref} />
 
