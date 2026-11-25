@@ -6,6 +6,7 @@
 export const MODEL_CATALOG = {
   blister: { label: 'Blister' },
   mug: { label: 'Caneca' },
+  canvasPrint: { label: 'Quadro' },
 } satisfies Record<string, { label: string }>
 
 export type ModelId = keyof typeof MODEL_CATALOG
