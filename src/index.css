@@ -3,6 +3,13 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
+ * Celular deitado (e janelas baixas): não sobra altura para cabeçalho,
+ * seletor, palco e barra de ações empilhados. Nesse caso o seletor sobe para
+ * a barra do cabeçalho e as ações viram um trilho vertical à direita.
+ */
+@custom-variant landscape-short (@media (orientation: landscape) and (max-height: 500px));
+
+/*
  * Tokens de cor. Os neutros não têm croma de propósito: assim como numa mesa
  * de prova de gráfica, a interface fica em cinza neutro para não interferir na
  * leitura das cores da arte. Destaque e chrome vêm da marca

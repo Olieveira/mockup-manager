@@ -35,12 +35,13 @@
 - `src/components/brand/`: slot do logo
 - `src/components/scene/`: cena 3D, textura da arte e progresso de carregamento
 - `src/components/scene/models/`: modelos 3D (Blister, Caneca), nome e ordem em `catalog.ts` e carregamento sob demanda em `index.ts`
-- `src/config/`: marca (`brand.ts`), tema e opções iniciais da cena
+- `src/config/`: marca (`brand.ts`), tema, opções iniciais da cena e lista de cenários HDRI (`scene.ts`)
 - `src/hooks/`: hooks da aplicação
 - `src/lib/`: funções sem React (processamento da arte, exportação, tema)
-- `src/index.css`: tokens de cor, raio, sombra e tipografia e utilitários de safe area (`px-safe-*`, `pb-safe-*`, `pt-safe`)
+- `src/index.css`: tokens de cor, raio, sombra e tipografia, utilitários de safe area (`px-safe-*`, `pb-safe-*`, `pt-safe`) e a variante `landscape-short:` para celular deitado
 - `vite/`: plugin que preenche o `index.html` com os dados da marca
 - `public/`: assets estáticos e modelos `.glb`
+- `public/hdri/`: cenários HDRI (`.hdr` em 1k)
 
 Para adicionar um modelo, crie o componente em `src/components/scene/models/`, inclua o nome em `catalog.ts` e o carregamento em `index.ts`. O TypeScript acusa se um dos dois ficar faltando.
 
@@ -102,9 +103,10 @@ Outros scripts:
 - O projeto é **100% client-side**, sem backend ou persistência de dados.
 - Imagens enviadas são aceitas com até **25MB** e redimensionadas para no máximo 2048px no navegador.
 - A exportação gera a imagem **com base na visualização atual** da cena 3D.
-- Os ambientes HDRI são carregados sob demanda a partir do CDN usado pelo drei.
+- Os cenários HDRI são servidos pelo próprio app, de `public/hdri/`, e só baixam quando escolhidos. São os mesmos dos presets do drei, da [Poly Haven](https://polyhaven.com/) (CC0). Para incluir outro, coloque o `.hdr` na pasta e adicione o nome em `ENVIRONMENT_PRESETS`.
 - A cena 3D (three, R3F e drei) e cada modelo ficam em chunks separados, baixados depois que a interface aparece. O pacote inicial tem cerca de 80KB com gzip. Depois que a primeira cena fica pronta, os outros modelos são baixados em segundo plano.
 - Ao trocar de modelo, cenário ou arte, a cena anterior continua na tela até a nova carregar, com o progresso num canto do palco.
+- Com o celular deitado (paisagem com até 500px de altura), o seletor de modelo sobe para a barra do cabeçalho e as ações viram um trilho vertical à direita, para o palco ganhar altura.
 
 ---
 

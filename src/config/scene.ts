@@ -1,17 +1,29 @@
+/**
+ * Cenários HDRI da Poly Haven (CC0), em resolução 1k, servidos de
+ * public/hdri. São os mesmos dos presets do drei, mas hospedados aqui para
+ * não depender do CDN dele. Cada arquivo só baixa quando o cenário é escolhido.
+ */
 export const ENVIRONMENT_PRESETS = [
-  { id: 'apartment', label: 'Apartamento' },
-  { id: 'city', label: 'Cidade' },
-  { id: 'dawn', label: 'Amanhecer' },
-  { id: 'forest', label: 'Floresta' },
-  { id: 'lobby', label: 'Lobby' },
-  { id: 'night', label: 'Noite' },
-  { id: 'park', label: 'Parque' },
-  { id: 'studio', label: 'Estúdio' },
-  { id: 'sunset', label: 'Pôr do Sol' },
-  { id: 'warehouse', label: 'Armazém' },
+  { id: 'apartment', label: 'Apartamento', file: 'lebombo_1k.hdr' },
+  { id: 'city', label: 'Cidade', file: 'potsdamer_platz_1k.hdr' },
+  { id: 'dawn', label: 'Amanhecer', file: 'kiara_1_dawn_1k.hdr' },
+  { id: 'forest', label: 'Floresta', file: 'forest_slope_1k.hdr' },
+  { id: 'lobby', label: 'Lobby', file: 'st_fagans_interior_1k.hdr' },
+  { id: 'night', label: 'Noite', file: 'dikhololo_night_1k.hdr' },
+  { id: 'park', label: 'Parque', file: 'rooitou_park_1k.hdr' },
+  { id: 'studio', label: 'Estúdio', file: 'studio_small_03_1k.hdr' },
+  { id: 'sunset', label: 'Pôr do Sol', file: 'venice_sunset_1k.hdr' },
+  { id: 'warehouse', label: 'Armazém', file: 'empty_warehouse_01_1k.hdr' },
 ] as const
 
 export type EnvironmentPreset = (typeof ENVIRONMENT_PRESETS)[number]['id']
+
+const ENVIRONMENT_DIR = '/hdri/'
+
+export function getEnvironmentPreset(id: EnvironmentPreset) {
+  const preset = ENVIRONMENT_PRESETS.find((item) => item.id === id) ?? ENVIRONMENT_PRESETS[0]
+  return { ...preset, url: ENVIRONMENT_DIR + preset.file }
+}
 
 export type BackgroundMode = 'preset' | 'color'
 
