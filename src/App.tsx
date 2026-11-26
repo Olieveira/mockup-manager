@@ -5,39 +5,27 @@ import { ModelSelector } from './components/ModelSelector'
 import { PreferencesPanel } from './components/PreferencesPanel'
 import { Viewer } from './components/Viewer'
 import { MODEL_IDS } from './components/scene/models/catalog'
-import type { ModelId } from './components/scene/models/catalog'
 import { LANDSCAPE_SHORT_QUERY } from './config/layout'
-import { DEFAULT_SCENE_SETTINGS } from './config/scene'
-import type { SceneSettings } from './config/scene'
 import { useMediaQuery } from './hooks/useMediaQuery'
+import { useSceneState } from './hooks/useSceneState'
 
 function preventDefault(event: Event) {
   event.preventDefault()
 }
 
 export function App() {
-  const [settings, setSettings] = useState(DEFAULT_SCENE_SETTINGS)
+  const { settings, model, updateSettings, selectModel, stepModel } = useSceneState()
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
   const [isLibraryOpen, setIsLibraryOpen] = useState(false)
-  const [modelIndex, setModelIndex] = useState(0)
   const isLandscapeShort = useMediaQuery(LANDSCAPE_SHORT_QUERY)
-
-  const updateSettings = useCallback((changes: Partial<SceneSettings>) => {
-    setSettings((current) => ({ ...current, ...changes }))
-  }, [])
 
   const closePreferences = useCallback(() => setIsPreferencesOpen(false), [])
   const closeLibrary = useCallback(() => setIsLibraryOpen(false), [])
-  const selectModel = useCallback((model: ModelId) => setModelIndex(MODEL_IDS.indexOf(model)), [])
-
-  const stepModel = useCallback((step: number) => {
-    setModelIndex((index) => (index + step + MODEL_IDS.length) % MODEL_IDS.length)
-  }, [])
 
   // Deitado, o seletor fica no meio da barra do cabeçalho. Ele muda de lugar no
   // DOM, e não só na tela, para a ordem do Tab seguir a ordem visual
   const modelSelector = (
-    <ModelSelector index={modelIndex} onStep={stepModel} onOpenLibrary={() => setIsLibraryOpen(true)} />
+    <ModelSelector index={MODEL_IDS.indexOf(model)} onStep={stepModel} onOpenLibrary={() => setIsLibraryOpen(true)} />
   )
 
   // Evita que o navegador abra um arquivo solto fora da área do mockup
@@ -57,7 +45,7 @@ export function App() {
       <Header>{isLandscapeShort && modelSelector}</Header>
       <main className="flex min-h-0 flex-1 flex-col landscape-short:contents">
         <Viewer
-          model={MODEL_IDS[modelIndex]}
+          model={model}
           modelSelector={isLandscapeShort ? null : modelSelector}
           settings={settings}
           onToggleAutoRotate={() => updateSettings({ autoRotate: !settings.autoRotate })}
@@ -72,7 +60,7 @@ export function App() {
       />
       <ModelLibrary
         open={isLibraryOpen}
-        model={MODEL_IDS[modelIndex]}
+        model={model}
         onSelect={selectModel}
         onClose={closeLibrary}
       />
