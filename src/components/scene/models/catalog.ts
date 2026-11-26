@@ -7,8 +7,14 @@ export const MODEL_CATALOG = {
   blister: { label: 'Blister' },
   mug: { label: 'Caneca' },
   canvasPrint: { label: 'Quadro' },
+  packagingBox: { label: 'Caixa' },
 } satisfies Record<string, { label: string }>
 
 export type ModelId = keyof typeof MODEL_CATALOG
 
 export const MODEL_IDS = Object.keys(MODEL_CATALOG) as ModelId[]
+
+/** Miniatura do modelo, gerada por scripts/thumbnails.mjs (npm run thumbnails). */
+export function getModelThumbnail(id: ModelId) {
+  return `/thumbnails/${id}.webp`
+}

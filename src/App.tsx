@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Header } from './components/Header'
+import { ModelLibrary } from './components/ModelLibrary'
 import { ModelSelector } from './components/ModelSelector'
 import { PreferencesPanel } from './components/PreferencesPanel'
 import { Viewer } from './components/Viewer'
 import { MODEL_IDS } from './components/scene/models/catalog'
+import type { ModelId } from './components/scene/models/catalog'
 import { LANDSCAPE_SHORT_QUERY } from './config/layout'
 import { DEFAULT_SCENE_SETTINGS } from './config/scene'
 import type { SceneSettings } from './config/scene'
@@ -16,6 +18,7 @@ function preventDefault(event: Event) {
 export function App() {
   const [settings, setSettings] = useState(DEFAULT_SCENE_SETTINGS)
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false)
   const [modelIndex, setModelIndex] = useState(0)
   const isLandscapeShort = useMediaQuery(LANDSCAPE_SHORT_QUERY)
 
@@ -24,6 +27,8 @@ export function App() {
   }, [])
 
   const closePreferences = useCallback(() => setIsPreferencesOpen(false), [])
+  const closeLibrary = useCallback(() => setIsLibraryOpen(false), [])
+  const selectModel = useCallback((model: ModelId) => setModelIndex(MODEL_IDS.indexOf(model)), [])
 
   const stepModel = useCallback((step: number) => {
     setModelIndex((index) => (index + step + MODEL_IDS.length) % MODEL_IDS.length)
@@ -31,7 +36,9 @@ export function App() {
 
   // Deitado, o seletor fica no meio da barra do cabeçalho. Ele muda de lugar no
   // DOM, e não só na tela, para a ordem do Tab seguir a ordem visual
-  const modelSelector = <ModelSelector index={modelIndex} onStep={stepModel} />
+  const modelSelector = (
+    <ModelSelector index={modelIndex} onStep={stepModel} onOpenLibrary={() => setIsLibraryOpen(true)} />
+  )
 
   // Evita que o navegador abra um arquivo solto fora da área do mockup
   useEffect(() => {
@@ -62,6 +69,12 @@ export function App() {
         settings={settings}
         onChange={updateSettings}
         onClose={closePreferences}
+      />
+      <ModelLibrary
+        open={isLibraryOpen}
+        model={MODEL_IDS[modelIndex]}
+        onSelect={selectModel}
+        onClose={closeLibrary}
       />
     </div>
   )
