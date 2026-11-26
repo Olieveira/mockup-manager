@@ -9,7 +9,11 @@ import type { ModelProps } from './types'
 
 /** Gerado por scripts/models/packagingBox.mjs, em metros e com a frente em +z. */
 const MODEL_URL = '/caixa.glb'
-const DEFAULT_ARTWORK = '/flork.jpg'
+/**
+ * Faca inteira de um produto de exemplo, gerada por scripts/boxArtwork.mjs (npm
+ * run artwork). Cobre as seis faces, como uma arte enviada na proporção da faca.
+ */
+const DEFAULT_ARTWORK = '/caixa-exemplo.webp'
 /** Nesta escala a caixa ocupa o palco como os outros modelos. */
 const SCALE = 1400
 /** Giro além de ficar de frente para a câmera, para uma das laterais aparecer. */

@@ -31,7 +31,7 @@ export default defineConfig([
   },
   {
     // As funções passadas ao page.evaluate rodam dentro do navegador
-    files: ['scripts/browser.mjs', 'scripts/thumbnails.mjs'],
+    files: ['scripts/boxArtwork.mjs', 'scripts/browser.mjs', 'scripts/thumbnails.mjs'],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
     },
