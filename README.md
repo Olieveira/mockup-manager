@@ -13,6 +13,8 @@
 - **Controle de rotação** automática e velocidade
 - Escolha de **cor de fundo sólida** ou ambiente HDRI (cidade, estúdio, etc.), com desfoque opcional do fundo
 - **Controles de luz**: intensidade e rotação do cenário, exposição, luz principal e sombra de contato sob o modelo, com botão para restaurar o padrão. Tudo sai igual na imagem exportada
+- **Predefinições de cena**: fundo, luz e giro salvos com um nome no topo do painel de ajustes, para aplicar de novo em qualquer modelo e arte
+- **A cena volta como estava** ao recarregar a página: ajustes, modelo escolhido e a última arte enviada ficam salvos no navegador até a arte ser redefinida
 - **Tema claro, escuro ou do sistema**, com a escolha salva no navegador
 - Interface adaptável e responsiva, navegável pelo teclado
 
@@ -32,23 +34,27 @@
 
 ## Estrutura do Projeto
 
-- `src/components/`: componentes da interface (header, viewer, seletor de modelo, biblioteca de modelos, painel de ajustes, seletor de tema, aviso de falha da cena)
-- `src/components/ui/`: componentes reutilizáveis (botões, dicas, avisos, controles deslizantes, régua de carregamento e o painel lateral em `<dialog>` usado pelos ajustes e pela biblioteca)
+- `src/components/`: componentes da interface (header, viewer, seletor de modelo, biblioteca de modelos, painel de ajustes com as predefinições de cena, seletor de tema, aviso de falha da cena)
+- `src/components/ui/`: componentes reutilizáveis (botões, dicas, avisos, controles deslizantes, chips, régua de carregamento e o painel lateral em `<dialog>` usado pelos ajustes e pela biblioteca)
 - `src/components/brand/`: slot do logo
 - `src/components/scene/`: cena 3D, textura da arte e progresso de carregamento
 - `src/components/scene/models/`: modelos 3D (Blister, Caneca, Quadro, Caixa), nome, ordem e miniatura em `catalog.ts` e carregamento sob demanda em `index.ts`
 - `src/config/`: marca (`brand.ts`), tema, opções iniciais da cena, padrões e limites da luz e lista de cenários HDRI (`scene.ts`) e a media query do celular deitado (`layout.ts`)
 - `src/hooks/`: hooks da aplicação
-- `src/lib/`: funções sem React (processamento da arte, exportação, tema)
+- `src/lib/`: funções sem React (processamento da arte, exportação, tema e o que fica salvo no navegador: estado da cena e predefinições em `sceneStorage.ts`, última arte em `artworkStore.ts`)
 - `src/index.css`: tokens de cor, raio, sombra e tipografia, utilitários de safe area (`px-safe-*`, `pb-safe-*`, `pt-safe`) e a variante `landscape-short:` para celular deitado (a mesma query fica em `config/layout.ts`; mantenha as duas iguais)
 - `vite/`: plugin que preenche o `index.html` com os dados da marca
-- `scripts/models/`: geradores de modelos por código, que montam a geometria com o three e exportam o `.glb` para `public/`
+- `scripts/models/`: geradores de modelos por código, que montam a geometria com o three e exportam o `.glb` para `public/`, e as medidas da faca da caixa (`packagingBoxDie.mjs`)
 - `scripts/thumbnails.mjs`: gerador das miniaturas da biblioteca, que abre o app no Chromium do Playwright e captura cada modelo
+- `scripts/boxArtwork.mjs`: gerador da arte padrão da caixa, a faca inteira de um produto de exemplo desenhada em SVG
+- `scripts/browser.mjs`: Chromium do Playwright e conversão para webp, usados pelos dois geradores de imagem
 - `public/`: assets estáticos e modelos `.glb`
 - `public/hdri/`: cenários HDRI (`.hdr` em 1k)
 - `public/thumbnails/`: miniaturas dos modelos (`<id>.webp`, 320px), geradas por `npm run thumbnails`
 
 Para adicionar um modelo, crie o componente em `src/components/scene/models/`, inclua o nome em `catalog.ts` e o carregamento em `index.ts`. O TypeScript acusa se um dos dois ficar faltando. A malha que recebe a arte deve se chamar `Arte`, e o modelo deve ficar em volta da origem com a base abaixo dela. Depois rode `npm run thumbnails` para gerar a miniatura dele.
+
+A arte padrão da caixa (`public/caixa-exemplo.webp`) é a faca planificada inteira de um chá fictício, na proporção exata da faca, para a caixa abrir com as seis faces impressas. Ela é desenhada em SVG sobre as mesmas medidas do modelo (`scripts/models/packagingBoxDie.mjs`) e convertida para webp no Chromium por `npm run artwork`. Uma arte enviada na mesma proporção também cobre a caixa inteira; qualquer outra vai só na frente.
 
 O quadro e a caixa não vêm de um programa 3D: eles são gerados por `scripts/models/canvasPrint.mjs` e `scripts/models/packagingBox.mjs` (`npm run models`), que montam a geometria com o three, calculam o UV da arte e exportam `public/quadro.glb` e `public/caixa.glb` com o `GLTFExporter`. Para mudar medidas ou materiais, edite o script e rode o comando de novo. Os `.glb` gerados ficam versionados.
 
@@ -105,13 +111,14 @@ Outros scripts:
 - `npm run lint`: executa o ESLint
 - `npm run typecheck`: checa apenas os tipos
 - `npm run models`: gera de novo os modelos feitos por código em `public/`
+- `npm run artwork`: gera de novo a arte padrão da caixa em `public/caixa-exemplo.webp`
 - `npm run thumbnails`: gera de novo as miniaturas da biblioteca em `public/thumbnails/`
 
 ---
 
 ## Observações
 
-- O projeto é **100% client-side**, sem backend ou persistência de dados.
+- O projeto é **100% client-side**, sem backend. O que fica salvo (tema, ajustes da cena, modelo, predefinições e a última arte) fica só no navegador: os textos no `localStorage` e a arte no IndexedDB, que guarda o arquivo como ele é. Um valor salvo inválido ou de outra versão volta ao padrão, campo a campo. Fora de um app instalado na tela de início, o Safari apaga esses dados de sites que ficam 7 dias sem ser abertos.
 - Imagens enviadas são aceitas com até **25MB** e redimensionadas para no máximo 2048px no navegador.
 - A exportação gera a imagem **com base na visualização atual** da cena 3D.
 - Os cenários HDRI são servidos pelo próprio app, de `public/hdri/`, e só baixam quando escolhidos. São os mesmos dos presets do drei, da [Poly Haven](https://polyhaven.com/) (CC0). Para incluir outro, coloque o `.hdr` na pasta e adicione o nome em `ENVIRONMENT_PRESETS`.
