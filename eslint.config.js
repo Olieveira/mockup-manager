@@ -21,12 +21,19 @@ export default defineConfig([
     },
   },
   {
-    // Geradores de modelos 3D, rodados com Node (npm run models)
+    // Scripts rodados com Node: geradores de modelos 3D (npm run models) e de miniaturas (npm run thumbnails)
     files: ['scripts/**/*.mjs'],
     extends: [js.configs.recommended],
     languageOptions: {
       ecmaVersion: 2022,
       globals: globals.node,
+    },
+  },
+  {
+    // As funções passadas ao page.evaluate rodam dentro do navegador
+    files: ['scripts/thumbnails.mjs'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
     },
   },
 ])
