@@ -8,7 +8,7 @@
  * cenas 3D, para a biblioteca não puxar o three para o pacote inicial.
  *
  * Usa o Chromium que o Playwright instala (npx playwright-core install
- * chromium-headless-shell) ou o caminho em CHROMIUM_PATH. O WebGL roda por
+ * --only-shell chromium) ou o caminho em CHROMIUM_PATH. O WebGL roda por
  * software, então a mesma imagem sai em qualquer máquina.
  *
  * Uso: npm run thumbnails
@@ -51,7 +51,7 @@ function findChromium() {
   if (found) return found
 
   throw new Error(
-    'Chromium não encontrado. Instale com "npx playwright-core install chromium-headless-shell" ou informe o caminho em CHROMIUM_PATH.',
+    'Chromium não encontrado. Instale com "npx playwright-core install --only-shell chromium" ou informe o caminho em CHROMIUM_PATH.',
   )
 }
 
