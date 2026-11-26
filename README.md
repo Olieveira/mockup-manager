@@ -1,12 +1,12 @@
 # Mockup Viewer
 
-**Mockup Viewer** é uma ferramenta web para visualização e exportação de mockups 3D personalizados diretamente no navegador. Desenvolvido inicialmente como parte de um sistema de vendas, este visualizador funciona de forma independente e gratuita, com suporte a modelos como **blister** e **caneca**.
+**Mockup Viewer** é uma ferramenta web para visualização e exportação de mockups 3D personalizados diretamente no navegador. Desenvolvido inicialmente como parte de um sistema de vendas, este visualizador funciona de forma independente e gratuita, com suporte a modelos como **blister**, **caneca** e **quadro em canvas**.
 
 ---
 
 ## Funcionalidades
 
-- Visualização 3D de **mockups de blister e caneca**
+- Visualização 3D de **mockups de blister, caneca e quadro em canvas**
 - Upload de **imagem personalizada** (PNG, JPG ou WebP) pelo botão ou arrastando o arquivo para a cena
 - **Exportação da cena atual** como imagem PNG (em celulares abre o compartilhamento nativo)
 - **Controle de rotação** automática e velocidade
@@ -35,16 +35,19 @@
 - `src/components/ui/`: componentes reutilizáveis (botões, dicas, avisos, controles deslizantes, régua de carregamento)
 - `src/components/brand/`: slot do logo
 - `src/components/scene/`: cena 3D, textura da arte e progresso de carregamento
-- `src/components/scene/models/`: modelos 3D (Blister, Caneca), nome e ordem em `catalog.ts` e carregamento sob demanda em `index.ts`
+- `src/components/scene/models/`: modelos 3D (Blister, Caneca, Quadro), nome e ordem em `catalog.ts` e carregamento sob demanda em `index.ts`
 - `src/config/`: marca (`brand.ts`), tema, opções iniciais da cena, padrões e limites da luz e lista de cenários HDRI (`scene.ts`) e a media query do celular deitado (`layout.ts`)
 - `src/hooks/`: hooks da aplicação
 - `src/lib/`: funções sem React (processamento da arte, exportação, tema)
 - `src/index.css`: tokens de cor, raio, sombra e tipografia, utilitários de safe area (`px-safe-*`, `pb-safe-*`, `pt-safe`) e a variante `landscape-short:` para celular deitado (a mesma query fica em `config/layout.ts`; mantenha as duas iguais)
 - `vite/`: plugin que preenche o `index.html` com os dados da marca
+- `scripts/models/`: geradores de modelos por código, que montam a geometria com o three e exportam o `.glb` para `public/`
 - `public/`: assets estáticos e modelos `.glb`
 - `public/hdri/`: cenários HDRI (`.hdr` em 1k)
 
-Para adicionar um modelo, crie o componente em `src/components/scene/models/`, inclua o nome em `catalog.ts` e o carregamento em `index.ts`. O TypeScript acusa se um dos dois ficar faltando.
+Para adicionar um modelo, crie o componente em `src/components/scene/models/`, inclua o nome em `catalog.ts` e o carregamento em `index.ts`. O TypeScript acusa se um dos dois ficar faltando. A malha que recebe a arte deve se chamar `Arte`, e o modelo deve ficar em volta da origem com a base abaixo dela.
+
+O quadro não vem de um programa 3D: ele é gerado por `scripts/models/canvasPrint.mjs` (`npm run models`), que monta a geometria com o three, calcula o UV da arte e exporta `public/quadro.glb` com o `GLTFExporter`. Para mudar medidas ou materiais, edite o script e rode o comando de novo. O `.glb` gerado fica versionado.
 
 ---
 
@@ -96,6 +99,7 @@ Outros scripts:
 - `npm run preview`: serve a versão de produção localmente
 - `npm run lint`: executa o ESLint
 - `npm run typecheck`: checa apenas os tipos
+- `npm run models`: gera de novo os modelos feitos por código em `public/`
 
 ---
 
@@ -109,6 +113,7 @@ Outros scripts:
 - Ao trocar de modelo, cenário ou arte, a cena anterior continua na tela até a nova carregar, com o progresso num canto do palco.
 - Com o celular deitado (paisagem com até 500px de altura), o seletor de modelo sobe para a barra do cabeçalho e as ações viram um trilho vertical à direita, para o palco ganhar altura. O seletor muda de lugar no DOM, e não só na tela, para a ordem do Tab seguir a ordem visual.
 - A cena só é redesenhada quando algo muda (arrastar, giro automático, troca de modelo, cenário, arte ou ajuste). Parada, ela não gasta GPU nem bateria. Código que altera o renderer ou a cena fora dos componentes do R3F precisa chamar `invalidate()`.
+- No quadro, a arte cobre a frente e dobra nas quatro bordas, como na impressão em tela esticada: a imagem inteira equivale à frente mais uma faixa de 3cm em volta. Se a proporção da imagem for diferente, ela é recortada no centro em vez de esticada, e o que for transparente no PNG sai branco, como a tela. O quadro entra virado para a câmera, já que só a frente tem arte.
 - A sombra de contato é desenhada uma vez por modelo e acompanha a base dele pelo tamanho medido na cena. Ela fica centrada no eixo da cena, então novos modelos devem ficar em volta da origem com a base abaixo dela.
 
 ---
@@ -117,7 +122,7 @@ Outros scripts:
 
 - Integração com sistema de vendas (mockups vinculados a produtos)
 - Possibilidade de salvar e carregar predefinições de cenas
-- Suporte a outros modelos além de blister e caneca
+- Mais modelos gerados por código, como garrafa e caixa de embalagem
 - Galeria de cenas geradas
 - Geração automática de mp4
 - Controle de dimensões da cena exportada

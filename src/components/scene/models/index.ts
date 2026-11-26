@@ -13,11 +13,13 @@ type ModelModule = { default: ComponentType<ModelProps> }
 const MODEL_LOADERS = {
   blister: () => import('./BlisterModel').then((module) => ({ default: module.BlisterModel })),
   mug: () => import('./MugModel').then((module) => ({ default: module.MugModel })),
+  canvasPrint: () => import('./CanvasPrintModel').then((module) => ({ default: module.CanvasPrintModel })),
 } satisfies Record<ModelId, () => Promise<ModelModule>>
 
 export const MODEL_COMPONENTS: Record<ModelId, ComponentType<ModelProps>> = {
   blister: lazy(MODEL_LOADERS.blister),
   mug: lazy(MODEL_LOADERS.mug),
+  canvasPrint: lazy(MODEL_LOADERS.canvasPrint),
 }
 
 /** Baixa o modelo antes de ele ser escolhido, para a troca ser imediata. */

@@ -5,23 +5,37 @@ import { SRGBColorSpace } from 'three'
 interface ArtworkTextureOptions {
   flipX?: boolean
   flipY?: boolean
+  /**
+   * Proporção (largura / altura) da área de impressão. Com ela a arte é
+   * recortada no centro para preencher a área sem distorcer, como faz a
+   * gráfica, em vez de ser esticada.
+   */
+  cover?: number
 }
 
 /**
  * Carrega a arte e devolve uma cópia configurada para o modelo. A cópia evita
  * alterar a textura em cache, que é compartilhada entre os modelos.
  */
-export function useArtworkTexture(url: string, { flipX = false, flipY = false }: ArtworkTextureOptions = {}) {
+export function useArtworkTexture(
+  url: string,
+  { flipX = false, flipY = false, cover }: ArtworkTextureOptions = {},
+) {
   const source = useTexture(url)
 
   const texture = useMemo(() => {
     const copy = source.clone()
     copy.colorSpace = SRGBColorSpace
     copy.center.set(0.5, 0.5)
-    copy.repeat.set(flipX ? -1 : 1, flipY ? -1 : 1)
+    // Com repeat menor que 1 a textura mostra só o miolo, a partir do centro
+    const { width, height } = source.image as { width: number; height: number }
+    const aspect = width / height
+    const scaleX = cover ? Math.min(1, cover / aspect) : 1
+    const scaleY = cover ? Math.min(1, aspect / cover) : 1
+    copy.repeat.set((flipX ? -1 : 1) * scaleX, (flipY ? -1 : 1) * scaleY)
     copy.needsUpdate = true
     return copy
-  }, [source, flipX, flipY])
+  }, [source, flipX, flipY, cover])
 
   useEffect(() => () => texture.dispose(), [texture])
 
