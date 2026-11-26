@@ -9,6 +9,7 @@ import {
   ROTATE_SPEED_RANGE,
 } from '../config/scene'
 import type { BackgroundMode, SceneSettings } from '../config/scene'
+import { Chip, ChipGroup } from './ui/ChipGroup'
 import { RangeField } from './ui/RangeField'
 import { SegmentedControl } from './ui/SegmentedControl'
 import type { SegmentedOption } from './ui/SegmentedControl'
@@ -49,9 +50,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-const optionChip =
-  'flex h-9 shrink-0 cursor-pointer items-center rounded-control border border-line px-3 text-sm transition-colors hover:bg-fill-hover has-checked:border-ink has-checked:bg-fill-pressed has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink'
-
 const footerButton =
   'h-10 flex-1 cursor-pointer rounded-control text-sm font-medium transition-[background-color,opacity]'
 
@@ -82,23 +80,18 @@ export function PreferencesPanel({ open, settings, onChange, onClose }: Preferen
           />
 
           {settings.backgroundMode === 'preset' ? (
-            // Deitado, a grade volta a ser uma fileira rolável, como no celular em pé
-            <fieldset className="-mx-5 flex min-w-0 gap-2 overflow-x-auto px-5 py-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 landscape-short:-mx-5 landscape-short:flex landscape-short:overflow-x-auto landscape-short:px-5">
-              <legend className="sr-only">Cenário</legend>
+            <ChipGroup legend="Cenário">
               {ENVIRONMENT_PRESETS.map(({ id, label }) => (
-                <label key={id} className={optionChip}>
-                  <input
-                    type="radio"
-                    name="environment"
-                    value={id}
-                    checked={settings.environment === id}
-                    onChange={() => onChange({ environment: id })}
-                    className="sr-only"
-                  />
+                <Chip
+                  key={id}
+                  name="environment"
+                  checked={settings.environment === id}
+                  onChange={() => onChange({ environment: id })}
+                >
                   {label}
-                </label>
+                </Chip>
               ))}
-            </fieldset>
+            </ChipGroup>
           ) : (
             <fieldset className="flex flex-wrap items-center gap-3 py-1">
               <legend className="sr-only">Cor de fundo</legend>
