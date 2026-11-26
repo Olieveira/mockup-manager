@@ -102,3 +102,54 @@ export function readSceneState(): SceneState {
 export function writeSceneState(state: SceneState) {
   writeStored(SCENE_STATE_KEY, state)
 }
+
+const SCENE_PRESETS_KEY = 'scene-presets'
+export const PRESET_NAME_MAX_LENGTH = 40
+
+/** Fundo, luz e giro salvos com um nome. Não leva modelo nem arte, para valer em qualquer mockup. */
+export interface ScenePreset {
+  name: string
+  settings: SceneSettings
+}
+
+export function isScenePresetsKey(key: string | null) {
+  return key === SCENE_PRESETS_KEY
+}
+
+/** Compara nomes sem diferenciar maiúsculas, que na lista pareceriam a mesma predefinição. */
+export function isSamePresetName(a: string, b: string) {
+  return a.trim().localeCompare(b.trim(), 'pt-BR', { sensitivity: 'accent' }) === 0
+}
+
+/** Predefinições salvas, sem as inválidas e sem nomes repetidos. */
+export function readScenePresets(): ScenePreset[] {
+  const stored = readStored(SCENE_PRESETS_KEY)
+  if (!Array.isArray(stored)) return []
+  const presets: ScenePreset[] = []
+  for (const item of stored) {
+    if (!isRecord(item) || typeof item.name !== 'string') continue
+    const name = item.name.trim().slice(0, PRESET_NAME_MAX_LENGTH)
+    if (!name || presets.some((preset) => isSamePresetName(preset.name, name))) continue
+    presets.push({ name, settings: readSceneSettings(item.settings) })
+  }
+  return presets
+}
+
+export function writeScenePresets(presets: ScenePreset[]) {
+  writeStored(SCENE_PRESETS_KEY, presets)
+}
+
+/**
+ * Diz se duas cenas ficam iguais na tela. Ignora o que o modo de fundo não
+ * usa (a cor com cenário, o cenário e o desfoque com cor sólida) e a
+ * velocidade com o giro desligado, para a predefinição continuar marcada
+ * depois de um vaivém nesses controles.
+ */
+export function isSameScene(a: SceneSettings, b: SceneSettings) {
+  return (Object.keys(a) as (keyof SceneSettings)[]).every((key) => {
+    if (a.backgroundMode === 'preset' && key === 'backgroundColor') return true
+    if (a.backgroundMode === 'color' && (key === 'environment' || key === 'backgroundBlur')) return true
+    if (!a.autoRotate && key === 'rotateSpeed') return true
+    return a[key] === b[key]
+  })
+}

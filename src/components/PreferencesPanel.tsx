@@ -9,6 +9,7 @@ import {
   ROTATE_SPEED_RANGE,
 } from '../config/scene'
 import type { BackgroundMode, SceneSettings } from '../config/scene'
+import { ScenePresets } from './ScenePresets'
 import { Chip, ChipGroup } from './ui/ChipGroup'
 import { RangeField } from './ui/RangeField'
 import { SegmentedControl } from './ui/SegmentedControl'
@@ -70,6 +71,10 @@ export function PreferencesPanel({ open, settings, onChange, onClose }: Preferen
       {/* O relative da área rolável segura os rádios sr-only (absolutos)
           dentro dela, senão eles fazem o próprio <dialog> rolar */}
       <div className="relative flex min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain border-y border-line px-5 py-4 sm:gap-6 sm:py-5 landscape-short:gap-5 landscape-short:py-4">
+        <Section title="Predefinições">
+          <ScenePresets settings={settings} onApply={onChange} />
+        </Section>
+
         <Section title="Fundo">
           <SegmentedControl
             legend="Tipo de fundo"

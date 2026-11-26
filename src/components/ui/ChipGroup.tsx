@@ -21,6 +21,8 @@ export function ChipGroup({ legend, children }: ChipGroupProps) {
 
 interface ChipProps {
   name: string
+  /** Texto completo no hover, para rótulos que podem ser cortados. */
+  title?: string
   checked: boolean
   onChange: () => void
   children: ReactNode
@@ -39,9 +41,12 @@ function revealChip(event: FocusEvent<HTMLInputElement>) {
  * O relative prende o rádio sr-only (absoluto) dentro do chip, e assim dentro
  * da fileira: solto, ele alarga a área rolável do painel, que anda para o lado.
  */
-export function Chip({ name, checked, onChange, children }: ChipProps) {
+export function Chip({ name, title, checked, onChange, children }: ChipProps) {
   return (
-    <label className="relative flex h-9 max-w-56 min-w-0 shrink-0 scroll-mx-5 cursor-pointer items-center rounded-control border border-line px-3 text-sm transition-colors hover:bg-fill-hover has-checked:border-ink has-checked:bg-fill-pressed has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink">
+    <label
+      title={title}
+      className="relative flex h-9 max-w-56 min-w-0 shrink-0 scroll-mx-5 cursor-pointer items-center rounded-control border border-line px-3 text-sm transition-colors hover:bg-fill-hover has-checked:border-ink has-checked:bg-fill-pressed has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink"
+    >
       <input type="radio" name={name} checked={checked} onChange={onChange} onFocus={revealChip} className="sr-only" />
       <span className="truncate">{children}</span>
     </label>
