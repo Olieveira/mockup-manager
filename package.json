@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc -b",
-    "models": "node scripts/models/canvasPrint.mjs"
+    "models": "node scripts/models/canvasPrint.mjs && node scripts/models/packagingBox.mjs"
   },
   "dependencies": {
     "@fontsource-variable/schibsted-grotesk": "^5.3.0",
