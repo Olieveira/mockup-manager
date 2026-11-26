@@ -7,18 +7,13 @@
  * convertido para webp no próprio navegador. As miniaturas são imagens, e não
  * cenas 3D, para a biblioteca não puxar o three para o pacote inicial.
  *
- * Usa o Chromium que o Playwright instala (npx playwright-core install
- * --only-shell chromium) ou o caminho em CHROMIUM_PATH. O WebGL roda por
- * software, então a mesma imagem sai em qualquer máquina.
+ * O Chromium vem de scripts/browser.mjs.
  *
  * Uso: npm run thumbnails
  */
-import { existsSync, readdirSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
-import { chromium } from 'playwright-core'
 import { createServer } from 'vite'
+import { launchChromium, pngToWebp } from './browser.mjs'
 
 const OUTPUT_DIR = new URL('../public/thumbnails/', import.meta.url)
 /** Lado da miniatura em pixels: o dobro do maior cartão da biblioteca, para telas de alta densidade. */
@@ -29,53 +24,6 @@ const VIEWPORT = { width: 1280, height: 800 }
 /** Tempo para a sombra de contato e o cenário assentarem depois da troca de modelo. */
 const SETTLE_MS = 3000
 const TIMEOUT_MS = 180_000
-
-/**
- * O Chromium esperado por esta versão do Playwright ou, se ele não estiver
- * instalado, o mais recente que já estiver na pasta de navegadores.
- */
-function findChromium() {
-  if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH
-  if (existsSync(chromium.executablePath())) return chromium.executablePath()
-
-  const root = process.env.PLAYWRIGHT_BROWSERS_PATH ?? join(homedir(), '.cache', 'ms-playwright')
-  const candidates = existsSync(root) ? readdirSync(root).filter((name) => /^chromium(_headless_shell)?-\d+$/.test(name)) : []
-  const binaries = candidates
-    .sort((a, b) => Number(b.split('-').pop()) - Number(a.split('-').pop()))
-    .map((name) =>
-      name.startsWith('chromium_headless_shell')
-        ? join(root, name, 'chrome-headless-shell-linux64', 'chrome-headless-shell')
-        : join(root, name, 'chrome-linux64', 'chrome'),
-    )
-  const found = binaries.find((path) => existsSync(path))
-  if (found) return found
-
-  throw new Error(
-    'Chromium não encontrado. Instale com "npx playwright-core install --only-shell chromium" ou informe o caminho em CHROMIUM_PATH.',
-  )
-}
-
-/** Recorta a captura do palco e a converte para webp dentro do navegador. */
-async function toWebp(page, png) {
-  const dataUrl = await page.evaluate(
-    async ({ base64, size, quality }) => {
-      const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${base64}`)).blob())
-      const canvas = new OffscreenCanvas(size, size)
-      const context = canvas.getContext('2d')
-      context.imageSmoothingQuality = 'high'
-      context.drawImage(bitmap, 0, 0, size, size)
-      const blob = await canvas.convertToBlob({ type: 'image/webp', quality })
-      const reader = new FileReader()
-      return new Promise((resolve) => {
-        reader.onload = () => resolve(reader.result)
-        reader.readAsDataURL(blob)
-      })
-    },
-    { base64: png.toString('base64'), size: SIZE, quality: QUALITY },
-  )
-  if (!dataUrl.startsWith('data:image/webp')) throw new Error('O navegador não gerou webp.')
-  return Buffer.from(dataUrl.split(',')[1], 'base64')
-}
 
 /** Espera a troca de modelo terminar: sem régua de progresso no palco e com tempo para a sombra. */
 async function waitForStage(page) {
@@ -94,10 +42,7 @@ async function chooseBackground(page) {
 }
 
 const server = await createServer({ logLevel: 'error', server: { port: 5190 } })
-const browser = await chromium.launch({
-  executablePath: findChromium(),
-  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
-})
+const browser = await launchChromium()
 
 try {
   await server.listen()
@@ -127,7 +72,7 @@ try {
       width: side,
       height: side,
     }
-    const webp = await toWebp(page, await page.screenshot({ clip }))
+    const webp = await pngToWebp(page, await page.screenshot({ clip }), { width: SIZE, height: SIZE, quality: QUALITY })
     await writeFile(new URL(`${id}.webp`, OUTPUT_DIR), webp)
     console.log(`thumbnails/${id}.webp: ${(webp.length / 1024).toFixed(1)}KB`)
   }
