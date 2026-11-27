@@ -1,15 +1,31 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArtworkError, prepareArtwork } from '../lib/artwork'
+import { clearStoredArtwork, loadStoredArtwork, storeArtwork } from '../lib/artworkStore'
 
 /**
  * Controla a arte enviada pelo usuário: processa o arquivo, expõe a URL
  * temporária usada como textura e libera os recursos quando ela é trocada.
+ * A última arte fica salva no navegador e volta ao recarregar a página, até
+ * ser trocada ou redefinida.
  */
 export function useArtwork() {
   const [artworkUrl, setArtworkUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const lastRequest = useRef(0)
+
+  // Traz de volta a arte da última visita. Se outra for escolhida (ou a arte
+  // for redefinida) antes de a leitura terminar, a salva é descartada
+  useEffect(() => {
+    let isCancelled = false
+    const request = lastRequest.current
+    loadStoredArtwork().then((stored) => {
+      if (stored && !isCancelled && request === lastRequest.current) setArtworkUrl(URL.createObjectURL(stored))
+    })
+    return () => {
+      isCancelled = true
+    }
+  }, [])
 
   // O cache da textura é limpo pela cena (ver SceneContent), para este hook
   // não puxar o drei para o pacote inicial
@@ -25,7 +41,9 @@ export function useArtwork() {
     try {
       const blob = await prepareArtwork(file)
       // Ignora o resultado se outro arquivo foi escolhido nesse meio tempo
-      if (request === lastRequest.current) setArtworkUrl(URL.createObjectURL(blob))
+      if (request !== lastRequest.current) return
+      setArtworkUrl(URL.createObjectURL(blob))
+      storeArtwork(blob)
     } catch (cause) {
       if (request !== lastRequest.current) return
       setError(cause instanceof ArtworkError ? cause.message : 'Não foi possível carregar a imagem.')
@@ -39,6 +57,7 @@ export function useArtwork() {
     setIsProcessing(false)
     setError(null)
     setArtworkUrl(null)
+    clearStoredArtwork()
   }, [])
 
   const dismissError = useCallback(() => setError(null), [])

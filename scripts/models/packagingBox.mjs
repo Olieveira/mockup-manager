@@ -10,7 +10,8 @@
  * pó ficam escondidas quando a caixa fecha, então só as seis faces externas
  * têm malha.
  *
- * Medidas em metros (padrão do glTF), com a frente virada para +z, o centro em
+ * As medidas ficam em packagingBoxDie.mjs, junto com as da arte de exemplo.
+ * Em metros (padrão do glTF), com a frente virada para +z, o centro em
  * x = z = 0 e a base abaixo da origem, como a sombra de contato da cena espera.
  *
  * Uso: npm run models
@@ -18,31 +19,24 @@
 import { Box3, Group, Mesh, MeshStandardMaterial, PlaneGeometry } from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { exportGlb } from './exportGlb.mjs'
+import {
+  BACK_U,
+  BODY_V,
+  DEPTH,
+  DIE_HEIGHT,
+  DIE_WIDTH,
+  FRONT_U,
+  HEIGHT,
+  LEFT_SIDE_U,
+  RIGHT_SIDE_U,
+  WIDTH,
+} from './packagingBoxDie.mjs'
 
 const OUTPUT = new URL('../../public/caixa.glb', import.meta.url)
-
-const WIDTH = 0.09
-const DEPTH = 0.04
-const HEIGHT = 0.14
-/** Aba de cola, presa por dentro do verso. */
-const GLUE_FLAP = 0.015
-/** Lingueta da tampa e do fundo, que entra na caixa. */
-const TUCK = 0.015
 
 const HALF_W = WIDTH / 2
 const HALF_H = HEIGHT / 2
 const HALF_D = DEPTH / 2
-
-/** Tamanho da faca inteira, que é o tamanho da arte. */
-const DIE_WIDTH = GLUE_FLAP + 2 * DEPTH + 2 * WIDTH
-const DIE_HEIGHT = HEIGHT + 2 * (DEPTH + TUCK)
-
-/** Início de cada painel na faca, da esquerda para a direita e de baixo para cima. */
-const LEFT_SIDE_U = GLUE_FLAP
-const FRONT_U = LEFT_SIDE_U + DEPTH
-const RIGHT_SIDE_U = FRONT_U + WIDTH
-const BACK_U = RIGHT_SIDE_U + DEPTH
-const BODY_V = TUCK + DEPTH
 
 /**
  * Leva um ponto da caixa montada para a faca. Cada painel continua o vizinho

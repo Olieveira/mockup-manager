@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc -b",
     "models": "node scripts/models/canvasPrint.mjs && node scripts/models/packagingBox.mjs",
+    "artwork": "node scripts/boxArtwork.mjs",
     "thumbnails": "node scripts/thumbnails.mjs"
   },
   "dependencies": {
