@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useRef, useState } from 'react'
-import type { ChangeEvent, DragEvent, ReactNode } from 'react'
+import type { ChangeEvent, DragEvent, ReactNode, RefObject } from 'react'
 import {
   PiArrowCounterClockwise,
   PiArrowsClockwise,
@@ -26,9 +26,12 @@ const EXPORT_FILE_NAME = 'mockup.png'
 const Scene = lazy(() => import('./scene/Scene'))
 
 interface ViewerProps {
+  sceneRef: RefObject<SceneHandle | null>
   model: ModelId
   /** Seletor de modelo, quando ele fica acima do palco (fora do celular deitado). */
   modelSelector: ReactNode
+  /** Botão Vista, quando ele fica acima do palco (fora do celular deitado). */
+  viewMenu: ReactNode
   settings: SceneSettings
   onToggleAutoRotate: () => void
   onOpenPreferences: () => void
@@ -38,14 +41,21 @@ function hasFiles(event: DragEvent) {
   return event.dataTransfer.types.includes('Files')
 }
 
-export function Viewer({ model, modelSelector, settings, onToggleAutoRotate, onOpenPreferences }: ViewerProps) {
+export function Viewer({
+  sceneRef,
+  model,
+  modelSelector,
+  viewMenu,
+  settings,
+  onToggleAutoRotate,
+  onOpenPreferences,
+}: ViewerProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
   const [isSceneReady, setIsSceneReady] = useState(false)
   // Conta entradas e saídas, já que dragleave também dispara ao passar sobre os filhos
   const [dragDepth, setDragDepth] = useState(0)
   const { artworkUrl, error, isProcessing, selectArtwork, resetArtwork, dismissError } = useArtwork()
-  const sceneRef = useRef<SceneHandle>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const markSceneReady = useCallback(() => setIsSceneReady(true), [])
@@ -96,9 +106,12 @@ export function Viewer({ model, modelSelector, settings, onToggleAutoRotate, onO
     >
       <div className="flex h-10 shrink-0 items-center justify-between gap-4 landscape-short:hidden">
         {modelSelector}
-        <p className="hidden text-sm text-ink-muted pointer-fine:block">
-          {isProcessing ? 'Preparando a arte…' : 'Arraste uma imagem PNG, JPG ou WebP até a cena'}
-        </p>
+        <div className="flex min-w-0 items-center gap-4">
+          <p className="hidden truncate text-sm text-ink-muted pointer-fine:block">
+            {isProcessing ? 'Preparando a arte…' : 'Arraste uma imagem PNG, JPG ou WebP até a cena'}
+          </p>
+          {viewMenu}
+        </div>
       </div>
 
       <div
