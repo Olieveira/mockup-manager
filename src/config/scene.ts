@@ -41,6 +41,17 @@ export interface LightingSettings {
   lightIntensity: number
   /** Sombra suave no chão, logo abaixo do modelo. */
   contactShadow: boolean
+  /** Opacidade da sombra no ponto mais escuro, de 0 a 1. */
+  shadowOpacity: number
+  /** Desfoque da sombra, de 0 (borda dura) a 1. */
+  shadowSoftness: number
+  /**
+   * Até que altura do modelo a sombra alcança, em proporção da altura dele.
+   * Com pouco alcance só a base escurece o chão; com mais, o modelo inteiro.
+   */
+  shadowReach: number
+  /** Tamanho do chão da sombra em proporção do que cabe o modelo. Maior espalha mais o desfoque. */
+  shadowSize: number
 }
 
 export interface SceneSettings extends LightingSettings {
@@ -58,6 +69,10 @@ export const DEFAULT_LIGHTING: LightingSettings = {
   exposure: 0,
   lightIntensity: 1,
   contactShadow: true,
+  shadowOpacity: 0.5,
+  shadowSoftness: 0.5,
+  shadowReach: 1,
+  shadowSize: 1,
 }
 
 export const DEFAULT_SCENE_SETTINGS: SceneSettings = {
@@ -68,6 +83,11 @@ export const DEFAULT_SCENE_SETTINGS: SceneSettings = {
   rotateSpeed: 3,
   ...DEFAULT_LIGHTING,
 }
+
+/** Ajustes da sombra, que só valem com ela ligada. */
+export const SHADOW_KEYS = ['shadowOpacity', 'shadowSoftness', 'shadowReach', 'shadowSize'] as const
+
+export type ShadowSettings = Pick<LightingSettings, (typeof SHADOW_KEYS)[number]>
 
 export function isDefaultLighting(settings: LightingSettings) {
   return (Object.keys(DEFAULT_LIGHTING) as (keyof LightingSettings)[]).every(
@@ -97,4 +117,10 @@ export const LIGHTING_RANGES = {
   environmentRotation: { min: 0, max: 355, step: 5 },
   exposure: { min: -2, max: 2, step: 0.1 },
   lightIntensity: { min: 0, max: 2, step: 0.05 },
+  shadowOpacity: { min: 0, max: 1, step: 0.05 },
+  shadowSoftness: { min: 0, max: 1, step: 0.05 },
+  // Os modelos ficam com a base meia altura abaixo da origem, e a sombra não
+  // pode alcançar menos do que isso (ver ModelShadow na Scene)
+  shadowReach: { min: 0.5, max: 2, step: 0.05 },
+  shadowSize: { min: 0.75, max: 2, step: 0.05 },
 } as const satisfies Partial<Record<keyof LightingSettings, { min: number; max: number; step: number }>>

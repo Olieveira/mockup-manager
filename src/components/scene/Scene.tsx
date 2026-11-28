@@ -1,11 +1,11 @@
-import { Suspense, useCallback, useDeferredValue, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import { memo, Suspense, useCallback, useDeferredValue, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type { Ref, RefObject } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, useTexture } from '@react-three/drei'
 import { Box3, MathUtils } from 'three'
 import type { Group } from 'three'
 import { getEnvironmentPreset } from '../../config/scene'
-import type { EnvironmentPreset, LightingSettings, SceneSettings } from '../../config/scene'
+import type { EnvironmentPreset, LightingSettings, SceneSettings, ShadowSettings } from '../../config/scene'
 import type { CameraView } from '../../config/cameraViews'
 import { StageProgress } from '../ui/StageProgress'
 import { MODEL_CATALOG, MODEL_IDS } from './models/catalog'
@@ -25,8 +25,8 @@ const LIGHT_POSITIONS: Vector3Tuple[] = [
   [-100, 100, 100],
 ]
 const DEG_TO_RAD = Math.PI / 180
-const SHADOW_OPACITY = 0.5
-const SHADOW_BLUR = 2.5
+/** Desfoque do drei com a suavidade no máximo. O padrão (metade) é o 2.5 de antes dos ajustes. */
+const SHADOW_BLUR_MAX = 5
 /** Folga do chão da sombra além do ponto do modelo mais longe do centro, para o desfoque não ser cortado. */
 const SHADOW_MARGIN = 1.5
 
@@ -69,33 +69,51 @@ function Exposure({ exposure }: { exposure: number }) {
   return null
 }
 
+interface ModelShadowProps extends ShadowSettings {
+  bounds: Box3
+}
+
 /**
  * Sombra suave no chão, logo abaixo do modelo. É desenhada uma vez só
- * (frames=1) e de novo apenas quando o modelo muda: o giro move a câmera, não
- * o modelo, então a sombra continua certa e não custa nada com a cena parada.
+ * (frames=1) e de novo apenas quando o modelo ou um ajuste dela muda: o giro
+ * move a câmera, não o modelo, então a sombra continua certa e não custa nada
+ * com a cena parada. O memo segura os outros ajustes da cena: o drei volta a
+ * desenhar a cada renderização do componente, mesmo sem nada ter mudado.
  *
  * Fica centrada em x = z = 0, e não no centro do modelo: o desfoque do drei
  * desenha um plano auxiliar na origem com a câmera da sombra, e com a sombra
  * fora do eixo a textura sai deslocada e cortada. Os modelos já ficam em
  * volta da origem (é para onde a câmera olha), com a base abaixo dela.
  */
-function ModelShadow({ bounds }: { bounds: Box3 }) {
+const ModelShadow = memo(function ModelShadow({
+  bounds,
+  shadowOpacity,
+  shadowSoftness,
+  shadowReach,
+  shadowSize,
+}: ModelShadowProps) {
+  const invalidate = useThree((state) => state.invalidate)
   const { position, scale, far } = useMemo(() => {
     const height = bounds.max.y - bounds.min.y
     const reach = Math.max(-bounds.min.x, bounds.max.x, -bounds.min.z, bounds.max.z)
+    // Um pouco abaixo da base, para o plano não disputar pixel com ela
+    const floor = bounds.min.y - height * 0.002
     return {
-      // Um pouco abaixo da base, para o plano não disputar pixel com ela
-      position: [0, bounds.min.y - height * 0.002, 0] as Vector3Tuple,
-      scale: reach * 2 * SHADOW_MARGIN,
-      // O plano auxiliar do desfoque (em y = 0) precisa caber no alcance da câmera
-      far: Math.max(height, -bounds.min.y),
+      position: [0, floor, 0] as Vector3Tuple,
+      scale: reach * 2 * SHADOW_MARGIN * shadowSize,
+      // O plano auxiliar do desfoque (em y = 0) precisa caber no alcance da
+      // câmera, senão a sombra some: o alcance curto para logo acima dele
+      far: Math.max(height * shadowReach, -floor * 1.01),
     }
-  }, [bounds])
+  }, [bounds, shadowReach, shadowSize])
+  const blur = shadowSoftness * SHADOW_BLUR_MAX
 
-  return (
-    <ContactShadows frames={1} position={position} scale={scale} far={far} blur={SHADOW_BLUR} opacity={SHADOW_OPACITY} />
-  )
-}
+  // O desfoque e o alcance não mudam nenhuma propriedade do three, então o
+  // quadro que redesenha a sombra precisa ser pedido aqui
+  useEffect(() => invalidate(), [invalidate, blur, far, scale, shadowOpacity])
+
+  return <ContactShadows frames={1} position={position} scale={scale} far={far} blur={blur} opacity={shadowOpacity} />
+})
 
 interface SceneBridgeProps {
   ref?: Ref<SceneHandle>
@@ -157,6 +175,7 @@ function SceneContent({
   onPendingChange,
 }: SceneContentProps) {
   const { backgroundBlur, environmentIntensity, environmentRotation, lightIntensity, contactShadow } = lighting
+  const { shadowOpacity, shadowSoftness, shadowReach, shadowSize } = lighting
   // Os valores adiados precisam ficar dentro do Canvas: o R3F renderiza os
   // filhos com o próprio reconciler, e só assim a troca que ainda está
   // baixando mantém a cena anterior na tela em vez de esvaziá-la
@@ -218,7 +237,15 @@ function SceneContent({
       <group key={deferredModel} ref={measureModel} rotation-y={MathUtils.degToRad(MODEL_CATALOG[deferredModel].frontTurn)}>
         <Model artworkUrl={deferredArtworkUrl} />
       </group>
-      {contactShadow && modelBounds && <ModelShadow bounds={modelBounds} />}
+      {contactShadow && modelBounds && (
+        <ModelShadow
+          bounds={modelBounds}
+          shadowOpacity={shadowOpacity}
+          shadowSoftness={shadowSoftness}
+          shadowReach={shadowReach}
+          shadowSize={shadowSize}
+        />
+      )}
       <ReadySignal onReady={onReady} />
     </Suspense>
   )

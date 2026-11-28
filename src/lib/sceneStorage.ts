@@ -1,11 +1,18 @@
 import { MODEL_IDS } from '../components/scene/models/catalog'
 import type { ModelId } from '../components/scene/models/catalog'
-import { DEFAULT_SCENE_SETTINGS, ENVIRONMENT_PRESETS, LIGHTING_RANGES, ROTATE_SPEED_RANGE } from '../config/scene'
+import {
+  DEFAULT_SCENE_SETTINGS,
+  ENVIRONMENT_PRESETS,
+  LIGHTING_RANGES,
+  ROTATE_SPEED_RANGE,
+  SHADOW_KEYS,
+} from '../config/scene'
 import type { BackgroundMode, EnvironmentPreset, SceneSettings } from '../config/scene'
 
 // O que fica salvo no navegador passa por aqui na volta: um valor de uma
 // versão antiga, editado à mão ou fora dos limites cai no padrão, campo a
-// campo, em vez de quebrar a cena
+// campo, em vez de quebrar a cena. Um campo novo também entra assim: o estado
+// salvo antes dele existir abre com o padrão no lugar, sem mudar a versão
 
 const SCENE_STATE_KEY = 'scene-state'
 /** Muda quando o formato salvo deixar de ser compatível. Um valor de outra versão é ignorado. */
@@ -65,6 +72,10 @@ export function readSceneSettings(value: unknown): SceneSettings {
     exposure: readNumber(stored.exposure, fallback.exposure, LIGHTING_RANGES.exposure),
     lightIntensity: readNumber(stored.lightIntensity, fallback.lightIntensity, LIGHTING_RANGES.lightIntensity),
     contactShadow: readBoolean(stored.contactShadow, fallback.contactShadow),
+    shadowOpacity: readNumber(stored.shadowOpacity, fallback.shadowOpacity, LIGHTING_RANGES.shadowOpacity),
+    shadowSoftness: readNumber(stored.shadowSoftness, fallback.shadowSoftness, LIGHTING_RANGES.shadowSoftness),
+    shadowReach: readNumber(stored.shadowReach, fallback.shadowReach, LIGHTING_RANGES.shadowReach),
+    shadowSize: readNumber(stored.shadowSize, fallback.shadowSize, LIGHTING_RANGES.shadowSize),
   }
 }
 
@@ -142,14 +153,15 @@ export function writeScenePresets(presets: ScenePreset[]) {
 /**
  * Diz se duas cenas ficam iguais na tela. Ignora o que o modo de fundo não
  * usa (a cor com cenário, o cenário e o desfoque com cor sólida) e a
- * velocidade com o giro desligado, para a predefinição continuar marcada
- * depois de um vaivém nesses controles.
+ * velocidade com o giro desligado, e o jeito da sombra com ela desligada,
+ * para a predefinição continuar marcada depois de um vaivém nesses controles.
  */
 export function isSameScene(a: SceneSettings, b: SceneSettings) {
   return (Object.keys(a) as (keyof SceneSettings)[]).every((key) => {
     if (a.backgroundMode === 'preset' && key === 'backgroundColor') return true
     if (a.backgroundMode === 'color' && (key === 'environment' || key === 'backgroundBlur')) return true
     if (!a.autoRotate && key === 'rotateSpeed') return true
+    if (!a.contactShadow && (SHADOW_KEYS as readonly string[]).includes(key)) return true
     return a[key] === b[key]
   })
 }

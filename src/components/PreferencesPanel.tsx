@@ -179,6 +179,41 @@ export function PreferencesPanel({ open, settings, onChange, onClose }: Preferen
                 onChange={(lightIntensity) => onChange({ lightIntensity })}
                 format={formatPercent}
               />
+              <fieldset className="mt-2 flex min-w-0 flex-col gap-3">
+                <legend className="mb-3 text-sm text-ink-muted">Sombra</legend>
+                <RangeField
+                  label="Opacidade"
+                  value={settings.shadowOpacity}
+                  {...LIGHTING_RANGES.shadowOpacity}
+                  onChange={(shadowOpacity) => onChange({ shadowOpacity })}
+                  format={formatPercent}
+                  disabled={!settings.contactShadow}
+                />
+                <RangeField
+                  label="Suavidade"
+                  value={settings.shadowSoftness}
+                  {...LIGHTING_RANGES.shadowSoftness}
+                  onChange={(shadowSoftness) => onChange({ shadowSoftness })}
+                  format={formatPercent}
+                  disabled={!settings.contactShadow}
+                />
+                <RangeField
+                  label="Alcance"
+                  value={settings.shadowReach}
+                  {...LIGHTING_RANGES.shadowReach}
+                  onChange={(shadowReach) => onChange({ shadowReach })}
+                  format={formatPercent}
+                  disabled={!settings.contactShadow}
+                />
+                <RangeField
+                  label="Tamanho"
+                  value={settings.shadowSize}
+                  {...LIGHTING_RANGES.shadowSize}
+                  onChange={(shadowSize) => onChange({ shadowSize })}
+                  format={formatPercent}
+                  disabled={!settings.contactShadow}
+                />
+              </fieldset>
             </div>
           </details>
         </Section>
