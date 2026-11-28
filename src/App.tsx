@@ -8,9 +8,10 @@ import { Viewer } from './components/Viewer'
 import type { SceneHandle } from './components/scene/Scene'
 import { MODEL_IDS } from './components/scene/models/catalog'
 import type { CameraView } from './config/cameraViews'
-import { LANDSCAPE_SHORT_QUERY } from './config/layout'
+import { FINE_POINTER_QUERY, LANDSCAPE_SHORT_QUERY } from './config/layout'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { useSceneState } from './hooks/useSceneState'
+import { useViewShortcuts } from './hooks/useViewShortcuts'
 
 function preventDefault(event: Event) {
   event.preventDefault()
@@ -21,16 +22,23 @@ export function App() {
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
   const [isLibraryOpen, setIsLibraryOpen] = useState(false)
   const isLandscapeShort = useMediaQuery(LANDSCAPE_SHORT_QUERY)
+  // Atalhos da câmera só com mouse ou trackpad, como a dica acima do palco
+  const hasShortcuts = useMediaQuery(FINE_POINTER_QUERY)
   const sceneRef = useRef<SceneHandle>(null)
 
   const closePreferences = useCallback(() => setIsPreferencesOpen(false), [])
   const closeLibrary = useCallback(() => setIsLibraryOpen(false), [])
 
   // Uma vista escolhida para o giro automático, senão ele tira a câmera de lá
-  function selectView(view: CameraView) {
-    sceneRef.current?.setView(view)
-    if (settings.autoRotate) updateSettings({ autoRotate: false })
-  }
+  const { autoRotate } = settings
+  const selectView = useCallback(
+    (view: CameraView) => {
+      sceneRef.current?.setView(view)
+      if (autoRotate) updateSettings({ autoRotate: false })
+    },
+    [autoRotate, updateSettings],
+  )
+  useViewShortcuts(hasShortcuts, selectView)
 
   // Deitado, o seletor e o botão Vista ficam no meio da barra do cabeçalho.
   // Eles mudam de lugar no DOM, e não só na tela, para a ordem do Tab seguir a
@@ -57,7 +65,7 @@ export function App() {
         {isLandscapeShort && (
           <div className="flex items-center gap-1">
             {modelSelector}
-            <ViewMenu onSelect={selectView} />
+            <ViewMenu onSelect={selectView} showShortcuts={hasShortcuts} />
           </div>
         )}
       </Header>
@@ -66,7 +74,10 @@ export function App() {
           sceneRef={sceneRef}
           model={model}
           modelSelector={isLandscapeShort ? null : modelSelector}
-          viewMenu={isLandscapeShort ? null : <ViewMenu onSelect={selectView} className="-mr-2.5" />}
+          viewMenu={
+            isLandscapeShort ? null : <ViewMenu onSelect={selectView} showShortcuts={hasShortcuts} className="-mr-2.5" />
+          }
+          onResetView={hasShortcuts ? () => selectView('initial') : undefined}
           settings={settings}
           onToggleAutoRotate={() => updateSettings({ autoRotate: !settings.autoRotate })}
           onOpenPreferences={() => setIsPreferencesOpen(true)}

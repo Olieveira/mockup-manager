@@ -35,6 +35,8 @@ interface ViewerProps {
   settings: SceneSettings
   onToggleAutoRotate: () => void
   onOpenPreferences: () => void
+  /** Duplo clique no palco, para voltar à vista Inicial (só com mouse ou trackpad). */
+  onResetView?: () => void
 }
 
 function hasFiles(event: DragEvent) {
@@ -49,6 +51,7 @@ export function Viewer({
   settings,
   onToggleAutoRotate,
   onOpenPreferences,
+  onResetView,
 }: ViewerProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
@@ -122,7 +125,7 @@ export function Viewer({
         onDrop={handleDrop}
       >
         <CropMarks />
-        <div className="absolute inset-0 overflow-hidden bg-sunken">
+        <div className="absolute inset-0 overflow-hidden bg-sunken" onDoubleClick={onResetView}>
           <StageErrorBoundary>
             <Suspense fallback={<StageProgress placement="center" label="Preparando o visualizador" />}>
               <Scene

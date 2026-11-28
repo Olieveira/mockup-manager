@@ -4,3 +4,9 @@
  * para o que só o React resolve, como mudar um controle de lugar no DOM.
  */
 export const LANDSCAPE_SHORT_QUERY = '(orientation: landscape) and (max-height: 500px)'
+
+/**
+ * Mouse ou trackpad, onde valem os atalhos da câmera (teclas e duplo clique).
+ * É a mesma condição da dica de arrastar acima do palco (pointer-fine:).
+ */
+export const FINE_POINTER_QUERY = '(pointer: fine)'

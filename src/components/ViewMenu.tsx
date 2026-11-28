@@ -6,6 +6,8 @@ import type { CameraView } from '../config/cameraViews'
 
 interface ViewMenuProps {
   onSelect: (view: CameraView) => void
+  /** Mostra as teclas de cada vista e a dica do duplo clique (com mouse ou trackpad). */
+  showShortcuts: boolean
   /** Classes somadas às do botão, como o recuo que o alinha à borda do palco. */
   className?: string
 }
@@ -15,7 +17,7 @@ interface ViewMenuProps {
  * de menu: as setas, Home e End andam pelos itens, o Esc fecha e devolve o
  * foco ao botão, e o Tab ou um clique fora fecham.
  */
-export function ViewMenu({ onSelect, className = '' }: ViewMenuProps) {
+export function ViewMenu({ onSelect, showShortcuts, className = '' }: ViewMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   // Item que recebe o foco ao abrir (o primeiro ou, pela seta para cima, o último)
   const [initialFocus, setInitialFocus] = useState<'first' | 'last'>('first')
@@ -111,20 +113,32 @@ export function ViewMenu({ onSelect, className = '' }: ViewMenuProps) {
           role="menu"
           aria-labelledby={buttonId}
           onKeyDown={handleMenuKeyDown}
-          className="absolute top-full right-0 z-30 mt-1 flex w-40 flex-col rounded-panel border border-line bg-surface p-1 shadow-raised"
+          className="absolute top-full right-0 z-30 mt-1 flex w-44 flex-col rounded-panel border border-line bg-surface p-1 shadow-raised"
         >
-          {CAMERA_VIEWS.map(({ id, label }) => (
+          {CAMERA_VIEWS.map(({ id, label, shortcut }) => (
             <button
               key={id}
               type="button"
               role="menuitem"
               tabIndex={-1}
+              aria-keyshortcuts={showShortcuts ? shortcut : undefined}
               onClick={() => select(id)}
-              className="flex h-9 cursor-pointer items-center rounded-inner px-2.5 text-left text-sm outline-none hover:bg-fill-hover focus-visible:bg-fill-pressed focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+              className="flex h-9 cursor-pointer items-center justify-between rounded-inner px-2.5 text-left text-sm outline-none hover:bg-fill-hover focus-visible:bg-fill-pressed focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
             >
               {label}
+              {showShortcuts && (
+                <kbd aria-hidden className="font-sans text-xs text-ink-muted tabular-nums">
+                  {shortcut}
+                </kbd>
+              )}
             </button>
           ))}
+          {/* Só para o mouse, então fica fora do que o leitor de tela lê no menu */}
+          {showShortcuts && (
+            <p aria-hidden className="mt-1 border-t border-line px-2.5 pt-2 pb-1.5 text-xs text-ink-muted">
+              Duplo clique no palco volta à Inicial
+            </p>
+          )}
         </div>
       )}
     </div>
