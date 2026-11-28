@@ -6,6 +6,7 @@ import {
   readScenePresets,
   writeScenePresets,
 } from '../lib/sceneStorage'
+import type { ScenePreset } from '../lib/sceneStorage'
 
 /**
  * Predefinições de cena salvas no navegador. Diferente do último estado, a
@@ -35,11 +36,31 @@ export function useScenePresets() {
     update(index === -1 ? [...presets, preset] : presets.map((item, i) => (i === index ? preset : item)))
   }
 
+  /**
+   * Junta as predefinições de um arquivo à lista. Um nome que já existe tem a
+   * predefinição substituída, como ao salvar. Devolve quantas eram novas.
+   */
+  function importPresets(imported: ScenePreset[]) {
+    const next = [...presets]
+    let added = 0
+    for (const preset of imported) {
+      const index = next.findIndex((item) => isSamePresetName(item.name, preset.name))
+      if (index === -1) {
+        next.push(preset)
+        added++
+      } else {
+        next[index] = preset
+      }
+    }
+    update(next)
+    return { added, replaced: imported.length - added }
+  }
+
   function removePreset(name: string) {
     update(presets.filter((item) => !isSamePresetName(item.name, name)))
   }
 
-  return { presets, savePreset, removePreset }
+  return { presets, savePreset, importPresets, removePreset }
 }
 
 export type ScenePresetsController = ReturnType<typeof useScenePresets>

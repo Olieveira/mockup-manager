@@ -10,6 +10,7 @@ interface SceneFileProps {
   controller: SceneFileController
   /** A arte enviada, ou null com a arte de exemplo (que não precisa ir no arquivo). */
   artwork: Blob | null
+  hasPresets: boolean
 }
 
 type Status = { tone: 'done' | 'warning'; text: string }
@@ -21,31 +22,30 @@ function formatSize(bytes: number) {
   return bytes < 100_000 ? kilobytes.format(bytes / 1000) : megabytes.format(bytes / 1_000_000)
 }
 
-function toStatus({ error, warning }: OpenResult): Status {
-  if (error) return { tone: 'warning', text: error }
-  if (warning) return { tone: 'warning', text: warning }
-  return { tone: 'done', text: 'Cena aberta.' }
+function toStatus({ done = '', error, warning }: OpenResult): Status {
+  const problem = error ?? warning
+  return problem ? { tone: 'warning', text: problem } : { tone: 'done', text: done }
 }
 
 /**
- * Exportar e abrir a cena em arquivo, no fim do painel de ajustes. O
- * resultado de abrir aparece aqui mesmo, e não sobre o palco, que a folha do
- * celular em pé cobre em parte.
+ * Exportar e abrir a cena e as predefinições em arquivo, no fim do painel de
+ * ajustes. O resultado de abrir aparece aqui mesmo, e não sobre o palco, que
+ * a folha do celular em pé cobre em parte.
  */
-export function SceneFile({ controller, artwork }: SceneFileProps) {
+export function SceneFile({ controller, artwork, hasPresets }: SceneFileProps) {
   const [includeArtwork, setIncludeArtwork] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
   const [status, setStatus] = useState<Status | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const { isOpening, exportScene, openFile } = controller
+  const { isOpening, exportScene, exportPresets, openFile } = controller
 
-  async function handleExport() {
+  async function handleExport(save: () => Promise<void>) {
     setStatus(null)
     setIsExporting(true)
     try {
-      await exportScene(includeArtwork)
+      await save()
     } catch {
-      setStatus({ tone: 'warning', text: 'Não foi possível exportar a cena.' })
+      setStatus({ tone: 'warning', text: 'Não foi possível exportar o arquivo.' })
     } finally {
       setIsExporting(false)
     }
@@ -63,7 +63,8 @@ export function SceneFile({ controller, artwork }: SceneFileProps) {
   return (
     <>
       <p className="text-sm text-ink-muted">
-        Guarde o modelo, os ajustes e a arte num arquivo .json para abrir depois ou em outro aparelho.
+        Guarde o modelo, os ajustes e a arte num arquivo .json para abrir depois ou em outro aparelho. As
+        predefinições saem num arquivo à parte.
       </p>
       {artwork && (
         <Switch
@@ -75,11 +76,11 @@ export function SceneFile({ controller, artwork }: SceneFileProps) {
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={handleExport}
+          onClick={() => handleExport(() => exportScene(includeArtwork))}
           disabled={isExporting}
           className={`${secondaryButton} flex-1 whitespace-nowrap`}
         >
-          {isExporting ? 'Exportando…' : 'Exportar cena'}
+          Exportar cena
         </button>
         <button
           type="button"
@@ -88,6 +89,14 @@ export function SceneFile({ controller, artwork }: SceneFileProps) {
           className={`${secondaryButton} flex-1 whitespace-nowrap`}
         >
           {isOpening ? 'Abrindo…' : 'Abrir arquivo'}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleExport(exportPresets)}
+          disabled={isExporting || !hasPresets}
+          className={`${secondaryButton} basis-full`}
+        >
+          Exportar predefinições
         </button>
       </div>
       <div role="status" className="empty:hidden">

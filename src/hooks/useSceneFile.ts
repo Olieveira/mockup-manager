@@ -4,22 +4,37 @@ import type { ModelId } from '../components/scene/models/catalog'
 import type { SceneSettings } from '../config/scene'
 import { prepareArtwork } from '../lib/artwork'
 import { saveFile } from '../lib/saveFile'
-import { createSceneFile, readSceneFile, SceneFileError } from '../lib/sceneFile'
+import { createPresetsFile, createSceneFile, readSceneFile, SceneFileError } from '../lib/sceneFile'
 import type { SceneState } from '../lib/sceneStorage'
 import type { ArtworkController } from './useArtwork'
+import type { ScenePresetsController } from './useScenePresets'
 
 interface SceneFileOptions {
   model: ModelId
   settings: SceneSettings
   artwork: ArtworkController
+  presets: ScenePresetsController
   loadScene: (scene: SceneState) => void
 }
 
 /** Resultado de abrir um arquivo, para quem abriu mostrar onde estiver. */
 export interface OpenResult {
+  /** O que foi aberto, quando deu certo. */
+  done?: string
   /** Deu certo, mas com um aviso (a arte do arquivo não pôde ser usada). */
   warning?: string
   error?: string
+}
+
+const PRESETS_FILE_NAME = 'predefinicoes.json'
+
+const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+
+function presetsSummary({ added, replaced }: { added: number; replaced: number }) {
+  const parts = []
+  if (added) parts.push(count(added, 'predefinição nova', 'predefinições novas'))
+  if (replaced) parts.push(count(replaced, 'substituída', 'substituídas'))
+  return `${parts.join(', ')}.`
 }
 
 /** Nome do arquivo pelo modelo, sem acento: cena-caixa.json. */
@@ -29,12 +44,13 @@ function sceneFileName(model: ModelId) {
 }
 
 /**
- * Exporta e abre a cena em arquivo .json: modelo, ajustes e, se pedido, a
- * arte enviada. Abrir troca tudo de uma vez, só depois de o arquivo inteiro
- * ter sido lido e a arte preparada, para uma falha no meio não deixar a cena
- * pela metade.
+ * Exporta e abre arquivos .json: a cena (modelo, ajustes e, se pedido, a
+ * arte enviada) ou a lista de predefinições. Abrir reconhece sozinho qual dos
+ * dois veio. A cena troca tudo de uma vez, só depois de o arquivo inteiro ter
+ * sido lido e a arte preparada, para uma falha no meio não deixar a cena pela
+ * metade.
  */
-export function useSceneFile({ model, settings, artwork, loadScene }: SceneFileOptions) {
+export function useSceneFile({ model, settings, artwork, presets, loadScene }: SceneFileOptions) {
   const [isOpening, setIsOpening] = useState(false)
 
   async function exportScene(includeArtwork: boolean) {
@@ -48,10 +64,19 @@ export function useSceneFile({ model, settings, artwork, loadScene }: SceneFileO
     await saveFile(file, sceneFileName(model))
   }
 
+  async function exportPresets() {
+    await saveFile(createPresetsFile(presets.presets), PRESETS_FILE_NAME)
+  }
+
   async function openFile(file: File): Promise<OpenResult> {
     setIsOpening(true)
     try {
       const opened = await readSceneFile(file)
+      if (opened.kind === 'presets') {
+        if (!opened.presets.length) return { error: 'Nenhuma predefinição válida neste arquivo.' }
+        return { done: presetsSummary(presets.importPresets(opened.presets)) }
+      }
+
       const { scene } = opened
       // A arte embutida passa pelas mesmas checagens de uma enviada; se não
       // servir, a cena abre do mesmo jeito, com a arte que já estava
@@ -67,7 +92,9 @@ export function useSceneFile({ model, settings, artwork, loadScene }: SceneFileO
       loadScene({ model: scene.model ?? model, settings: scene.settings })
       if (prepared) artwork.applyArtwork(prepared)
       else if (prepared === null) artwork.resetArtwork()
-      return isArtworkInvalid ? { warning: 'A arte do arquivo não pôde ser usada. A arte atual continua.' } : {}
+      return isArtworkInvalid
+        ? { warning: 'Cena aberta, mas a arte do arquivo não pôde ser usada. A arte atual continua.' }
+        : { done: 'Cena aberta.' }
     } catch (cause) {
       return { error: cause instanceof SceneFileError ? cause.message : 'Não foi possível abrir o arquivo.' }
     } finally {
@@ -75,7 +102,7 @@ export function useSceneFile({ model, settings, artwork, loadScene }: SceneFileO
     }
   }
 
-  return { isOpening, exportScene, openFile }
+  return { isOpening, exportScene, exportPresets, openFile }
 }
 
 export type SceneFileController = ReturnType<typeof useSceneFile>

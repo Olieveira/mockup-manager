@@ -25,7 +25,7 @@ export function App() {
   // Arte e predefinições ficam aqui porque o palco e o painel mexem nelas
   const artwork = useArtwork()
   const scenePresets = useScenePresets()
-  const sceneFile = useSceneFile({ model, settings, artwork, loadScene })
+  const sceneFile = useSceneFile({ model, settings, artwork, presets: scenePresets, loadScene })
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
   const [isLibraryOpen, setIsLibraryOpen] = useState(false)
   const isLandscapeShort = useMediaQuery(LANDSCAPE_SHORT_QUERY)

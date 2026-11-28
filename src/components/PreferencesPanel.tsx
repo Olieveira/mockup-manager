@@ -250,7 +250,12 @@ export function PreferencesPanel({
 
         <Section title="Arquivo">
           {/* Volta ao estado inicial a cada vez que o painel abre, sem o aviso da última vez */}
-          <SceneFile key={String(open)} controller={sceneFile} artwork={artwork} />
+          <SceneFile
+            key={String(open)}
+            controller={sceneFile}
+            artwork={artwork}
+            hasPresets={presets.presets.length > 0}
+          />
         </Section>
       </div>
 
