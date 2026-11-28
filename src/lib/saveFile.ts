@@ -14,9 +14,10 @@ function download(blob: Blob, fileName: string) {
 
 /**
  * Em dispositivos de toque usa a folha de compartilhamento nativa, que no
- * iOS é o caminho para salvar a imagem em Fotos. Nos demais, baixa o arquivo.
+ * iOS é o caminho para salvar a imagem em Fotos ou o arquivo em Arquivos. Nos
+ * demais, ou se o navegador não compartilhar esse tipo, baixa o arquivo.
  */
-export async function saveImage(blob: Blob, fileName: string) {
+export async function saveFile(blob: Blob, fileName: string) {
   const file = new File([blob], fileName, { type: blob.type })
   const isTouchDevice = window.matchMedia('(pointer: coarse)').matches
 

@@ -8,9 +8,9 @@ import {
   PiSlidersHorizontal,
 } from 'react-icons/pi'
 import type { SceneSettings } from '../config/scene'
-import { useArtwork } from '../hooks/useArtwork'
+import type { ArtworkController } from '../hooks/useArtwork'
 import { ACCEPTED_ARTWORK_TYPES } from '../lib/artwork'
-import { saveImage } from '../lib/saveImage'
+import { saveFile } from '../lib/saveFile'
 import { StageErrorBoundary } from './StageErrorBoundary'
 import type { SceneHandle } from './scene/Scene'
 import type { ModelId } from './scene/models/catalog'
@@ -33,6 +33,8 @@ interface ViewerProps {
   /** Botão Vista, quando ele fica acima do palco (fora do celular deitado). */
   viewMenu: ReactNode
   settings: SceneSettings
+  /** A arte enviada, controlada pelo App para o painel também ler e trocar. */
+  artwork: ArtworkController
   onToggleAutoRotate: () => void
   onOpenPreferences: () => void
   /** Duplo clique no palco, para voltar à vista Inicial (só com mouse ou trackpad). */
@@ -49,6 +51,7 @@ export function Viewer({
   modelSelector,
   viewMenu,
   settings,
+  artwork,
   onToggleAutoRotate,
   onOpenPreferences,
   onResetView,
@@ -58,7 +61,8 @@ export function Viewer({
   const [isSceneReady, setIsSceneReady] = useState(false)
   // Conta entradas e saídas, já que dragleave também dispara ao passar sobre os filhos
   const [dragDepth, setDragDepth] = useState(0)
-  const { artworkUrl, error, isProcessing, selectArtwork, resetArtwork, dismissError } = useArtwork()
+  const { error, isProcessing, selectArtwork, resetArtwork, dismissError } = artwork
+  const artworkUrl = artwork.artwork?.url ?? null
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const markSceneReady = useCallback(() => setIsSceneReady(true), [])
@@ -89,7 +93,7 @@ export function Viewer({
     setIsExporting(true)
     try {
       const blob = await sceneRef.current?.capture()
-      if (blob) await saveImage(blob, EXPORT_FILE_NAME)
+      if (blob) await saveFile(blob, EXPORT_FILE_NAME)
     } catch {
       setExportError('Não foi possível exportar a imagem.')
     } finally {

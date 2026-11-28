@@ -41,3 +41,5 @@ export function useScenePresets() {
 
   return { presets, savePreset, removePreset }
 }
+
+export type ScenePresetsController = ReturnType<typeof useScenePresets>

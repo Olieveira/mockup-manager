@@ -2,6 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArtworkError, prepareArtwork } from '../lib/artwork'
 import { clearStoredArtwork, loadStoredArtwork, storeArtwork } from '../lib/artworkStore'
 
+/** A arte enviada: o arquivo já preparado e a URL temporária usada como textura. */
+export interface Artwork {
+  blob: Blob
+  url: string
+}
+
+function toArtwork(blob: Blob): Artwork {
+  return { blob, url: URL.createObjectURL(blob) }
+}
+
 /**
  * Controla a arte enviada pelo usuário: processa o arquivo, expõe a URL
  * temporária usada como textura e libera os recursos quando ela é trocada.
@@ -9,7 +19,7 @@ import { clearStoredArtwork, loadStoredArtwork, storeArtwork } from '../lib/artw
  * ser trocada ou redefinida.
  */
 export function useArtwork() {
-  const [artworkUrl, setArtworkUrl] = useState<string | null>(null)
+  const [artwork, setArtwork] = useState<Artwork | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const lastRequest = useRef(0)
@@ -20,7 +30,7 @@ export function useArtwork() {
     let isCancelled = false
     const request = lastRequest.current
     loadStoredArtwork().then((stored) => {
-      if (stored && !isCancelled && request === lastRequest.current) setArtworkUrl(URL.createObjectURL(stored))
+      if (stored && !isCancelled && request === lastRequest.current) setArtwork(toArtwork(stored))
     })
     return () => {
       isCancelled = true
@@ -29,6 +39,7 @@ export function useArtwork() {
 
   // O cache da textura é limpo pela cena (ver SceneContent), para este hook
   // não puxar o drei para o pacote inicial
+  const artworkUrl = artwork?.url ?? null
   useEffect(() => {
     if (!artworkUrl) return
     return () => URL.revokeObjectURL(artworkUrl)
@@ -42,7 +53,7 @@ export function useArtwork() {
       const blob = await prepareArtwork(file)
       // Ignora o resultado se outro arquivo foi escolhido nesse meio tempo
       if (request !== lastRequest.current) return
-      setArtworkUrl(URL.createObjectURL(blob))
+      setArtwork(toArtwork(blob))
       storeArtwork(blob)
     } catch (cause) {
       if (request !== lastRequest.current) return
@@ -56,11 +67,13 @@ export function useArtwork() {
     lastRequest.current++
     setIsProcessing(false)
     setError(null)
-    setArtworkUrl(null)
+    setArtwork(null)
     clearStoredArtwork()
   }, [])
 
   const dismissError = useCallback(() => setError(null), [])
 
-  return { artworkUrl, error, isProcessing, selectArtwork, resetArtwork, dismissError }
+  return { artwork, error, isProcessing, selectArtwork, resetArtwork, dismissError }
 }
+
+export type ArtworkController = ReturnType<typeof useArtwork>

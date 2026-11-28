@@ -9,6 +9,7 @@ import {
   ROTATE_SPEED_RANGE,
 } from '../config/scene'
 import type { BackgroundMode, SceneSettings } from '../config/scene'
+import type { ScenePresetsController } from '../hooks/useScenePresets'
 import { ScenePresets } from './ScenePresets'
 import { Chip, ChipGroup } from './ui/ChipGroup'
 import { RangeField } from './ui/RangeField'
@@ -20,6 +21,7 @@ import { Switch } from './ui/Switch'
 interface PreferencesPanelProps {
   open: boolean
   settings: SceneSettings
+  presets: ScenePresetsController
   onChange: (changes: Partial<SceneSettings>) => void
   onClose: () => void
 }
@@ -62,7 +64,7 @@ const swatch =
  * rodapé ficam fixos e só os ajustes rolam, para Concluir estar sempre à mão
  * mesmo na folha do celular e com ele deitado.
  */
-export function PreferencesPanel({ open, settings, onChange, onClose }: PreferencesPanelProps) {
+export function PreferencesPanel({ open, settings, presets, onChange, onClose }: PreferencesPanelProps) {
   const isCustomColor = !SWATCH_COLORS.includes(settings.backgroundColor)
   const isLightingDefault = isDefaultLighting(settings)
 
@@ -72,7 +74,7 @@ export function PreferencesPanel({ open, settings, onChange, onClose }: Preferen
           dentro dela, senão eles fazem o próprio <dialog> rolar */}
       <div className="relative flex min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain border-y border-line px-5 py-4 sm:gap-6 sm:py-5 landscape-short:gap-5 landscape-short:py-4">
         <Section title="Predefinições">
-          <ScenePresets settings={settings} onApply={onChange} />
+          <ScenePresets settings={settings} controller={presets} onApply={onChange} />
         </Section>
 
         <Section title="Fundo">

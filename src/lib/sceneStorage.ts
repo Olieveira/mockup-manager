@@ -15,8 +15,11 @@ import type { BackgroundMode, EnvironmentPreset, SceneSettings } from '../config
 // salvo antes dele existir abre com o padrão no lugar, sem mudar a versão
 
 const SCENE_STATE_KEY = 'scene-state'
-/** Muda quando o formato salvo deixar de ser compatível. Um valor de outra versão é ignorado. */
-const STORAGE_VERSION = 1
+/**
+ * Versão do formato salvo no navegador e nos arquivos de cena. Muda quando o
+ * formato deixar de ser compatível. Um valor de outra versão é ignorado.
+ */
+export const FORMAT_VERSION = 1
 
 export interface SceneState {
   settings: SceneSettings
@@ -29,7 +32,7 @@ const BACKGROUND_MODES: readonly BackgroundMode[] = ['preset', 'color']
 const ENVIRONMENT_IDS: readonly string[] = ENVIRONMENT_PRESETS.map(({ id }) => id)
 const HEX_COLOR = /^#[0-9a-f]{6}$/i
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
@@ -85,7 +88,7 @@ export function readStored(key: string): unknown {
     const raw = localStorage.getItem(key)
     if (!raw) return undefined
     const stored: unknown = JSON.parse(raw)
-    return isRecord(stored) && stored.version === STORAGE_VERSION ? stored.data : undefined
+    return isRecord(stored) && stored.version === FORMAT_VERSION ? stored.data : undefined
   } catch {
     // Armazenamento bloqueado (modo privado em alguns navegadores) ou JSON inválido
     return undefined
@@ -94,20 +97,22 @@ export function readStored(key: string): unknown {
 
 export function writeStored(key: string, data: unknown) {
   try {
-    localStorage.setItem(key, JSON.stringify({ version: STORAGE_VERSION, data }))
+    localStorage.setItem(key, JSON.stringify({ version: FORMAT_VERSION, data }))
   } catch {
     // Sem armazenamento, ou sem espaço: vale só para esta visita
   }
+}
+
+/** O modelo, se o valor for um id do catálogo, ou o reserva. */
+export function readModelId(value: unknown, fallback: ModelId): ModelId {
+  return MODEL_IDS.includes(value as ModelId) ? (value as ModelId) : fallback
 }
 
 /** Último estado da cena salvo, ou o padrão na primeira visita. */
 export function readSceneState(): SceneState {
   const stored = readStored(SCENE_STATE_KEY)
   const { settings, model } = isRecord(stored) ? stored : {}
-  return {
-    settings: readSceneSettings(settings),
-    model: MODEL_IDS.includes(model as ModelId) ? (model as ModelId) : MODEL_IDS[0],
-  }
+  return { settings: readSceneSettings(settings), model: readModelId(model, MODEL_IDS[0]) }
 }
 
 export function writeSceneState(state: SceneState) {
@@ -132,9 +137,8 @@ export function isSamePresetName(a: string, b: string) {
   return a.trim().localeCompare(b.trim(), 'pt-BR', { sensitivity: 'accent' }) === 0
 }
 
-/** Predefinições salvas, sem as inválidas e sem nomes repetidos. */
-export function readScenePresets(): ScenePreset[] {
-  const stored = readStored(SCENE_PRESETS_KEY)
+/** Predefinições válidas a partir de qualquer valor, sem as inválidas e sem nomes repetidos. */
+export function readPresetList(stored: unknown): ScenePreset[] {
   if (!Array.isArray(stored)) return []
   const presets: ScenePreset[] = []
   for (const item of stored) {
@@ -144,6 +148,11 @@ export function readScenePresets(): ScenePreset[] {
     presets.push({ name, settings: readSceneSettings(item.settings) })
   }
   return presets
+}
+
+/** Predefinições salvas no navegador. */
+export function readScenePresets() {
+  return readPresetList(readStored(SCENE_PRESETS_KEY))
 }
 
 export function writeScenePresets(presets: ScenePreset[]) {

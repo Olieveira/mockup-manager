@@ -2,12 +2,14 @@ import { useId, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { flushSync } from 'react-dom'
 import type { SceneSettings } from '../config/scene'
-import { useScenePresets } from '../hooks/useScenePresets'
+import type { ScenePresetsController } from '../hooks/useScenePresets'
 import { isSamePresetName, isSameScene, PRESET_NAME_MAX_LENGTH } from '../lib/sceneStorage'
 import { Chip, ChipGroup } from './ui/ChipGroup'
 
 interface ScenePresetsProps {
   settings: SceneSettings
+  /** A lista salva, controlada pelo App para o arquivo de predefinições também mexer nela. */
+  controller: ScenePresetsController
   onApply: (settings: SceneSettings) => void
 }
 
@@ -20,8 +22,8 @@ const secondaryButton =
  * escolhida" guardada à parte, então mexer num ajuste desmarca na hora e
  * voltar ao mesmo valor marca de novo.
  */
-export function ScenePresets({ settings, onApply }: ScenePresetsProps) {
-  const { presets, savePreset, removePreset } = useScenePresets()
+export function ScenePresets({ settings, controller, onApply }: ScenePresetsProps) {
+  const { presets, savePreset, removePreset } = controller
   const [name, setName] = useState<string | null>(null)
   const saveButtonRef = useRef<HTMLButtonElement>(null)
   const inputId = useId()

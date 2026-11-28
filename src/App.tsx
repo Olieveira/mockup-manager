@@ -9,7 +9,9 @@ import type { SceneHandle } from './components/scene/Scene'
 import { MODEL_IDS } from './components/scene/models/catalog'
 import type { CameraView } from './config/cameraViews'
 import { FINE_POINTER_QUERY, LANDSCAPE_SHORT_QUERY } from './config/layout'
+import { useArtwork } from './hooks/useArtwork'
 import { useMediaQuery } from './hooks/useMediaQuery'
+import { useScenePresets } from './hooks/useScenePresets'
 import { useSceneState } from './hooks/useSceneState'
 import { useViewShortcuts } from './hooks/useViewShortcuts'
 
@@ -19,6 +21,9 @@ function preventDefault(event: Event) {
 
 export function App() {
   const { settings, model, updateSettings, selectModel, stepModel } = useSceneState()
+  // Arte e predefinições ficam aqui porque o palco e o painel mexem nelas
+  const artwork = useArtwork()
+  const scenePresets = useScenePresets()
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
   const [isLibraryOpen, setIsLibraryOpen] = useState(false)
   const isLandscapeShort = useMediaQuery(LANDSCAPE_SHORT_QUERY)
@@ -91,6 +96,7 @@ export function App() {
           }
           onResetView={hasShortcuts ? () => selectView('initial') : undefined}
           settings={settings}
+          artwork={artwork}
           onToggleAutoRotate={() => updateSettings({ autoRotate: !settings.autoRotate })}
           onOpenPreferences={openPreferences}
         />
@@ -98,6 +104,7 @@ export function App() {
       <PreferencesPanel
         open={isPreferencesOpen}
         settings={settings}
+        presets={scenePresets}
         onChange={updateSettings}
         onClose={closePreferences}
       />
