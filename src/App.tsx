@@ -29,6 +29,18 @@ export function App() {
   const closePreferences = useCallback(() => setIsPreferencesOpen(false), [])
   const closeLibrary = useCallback(() => setIsLibraryOpen(false), [])
 
+  // Os painéis ocupam o mesmo lugar e, sem modal, um não impede de abrir o
+  // outro: abrir um fecha o outro
+  function openPreferences() {
+    setIsLibraryOpen(false)
+    setIsPreferencesOpen(true)
+  }
+
+  function openLibrary() {
+    setIsPreferencesOpen(false)
+    setIsLibraryOpen(true)
+  }
+
   // Uma vista escolhida para o giro automático, senão ele tira a câmera de lá
   const { autoRotate } = settings
   const selectView = useCallback(
@@ -44,7 +56,7 @@ export function App() {
   // Eles mudam de lugar no DOM, e não só na tela, para a ordem do Tab seguir a
   // ordem visual
   const modelSelector = (
-    <ModelSelector index={MODEL_IDS.indexOf(model)} onStep={stepModel} onOpenLibrary={() => setIsLibraryOpen(true)} />
+    <ModelSelector index={MODEL_IDS.indexOf(model)} onStep={stepModel} onOpenLibrary={openLibrary} />
   )
 
   // Evita que o navegador abra um arquivo solto fora da área do mockup
@@ -80,7 +92,7 @@ export function App() {
           onResetView={hasShortcuts ? () => selectView('initial') : undefined}
           settings={settings}
           onToggleAutoRotate={() => updateSettings({ autoRotate: !settings.autoRotate })}
-          onOpenPreferences={() => setIsPreferencesOpen(true)}
+          onOpenPreferences={openPreferences}
         />
       </main>
       <PreferencesPanel

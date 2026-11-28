@@ -113,7 +113,7 @@ export function ViewMenu({ onSelect, showShortcuts, className = '' }: ViewMenuPr
           role="menu"
           aria-labelledby={buttonId}
           onKeyDown={handleMenuKeyDown}
-          className="absolute top-full right-0 z-30 mt-1 flex w-44 flex-col rounded-panel border border-line bg-surface p-1 shadow-raised"
+          className="absolute top-full right-0 z-50 mt-1 flex w-44 flex-col rounded-panel border border-line bg-surface p-1 shadow-raised"
         >
           {CAMERA_VIEWS.map(({ id, label, shortcut }) => (
             <button
