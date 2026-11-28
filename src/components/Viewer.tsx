@@ -9,8 +9,10 @@ import {
 } from 'react-icons/pi'
 import type { SceneSettings } from '../config/scene'
 import type { ArtworkController } from '../hooks/useArtwork'
+import type { OpenResult } from '../hooks/useSceneFile'
 import { ACCEPTED_ARTWORK_TYPES } from '../lib/artwork'
 import { saveFile } from '../lib/saveFile'
+import { isJsonFile } from '../lib/sceneFile'
 import { StageErrorBoundary } from './StageErrorBoundary'
 import type { SceneHandle } from './scene/Scene'
 import type { ModelId } from './scene/models/catalog'
@@ -35,6 +37,10 @@ interface ViewerProps {
   settings: SceneSettings
   /** A arte enviada, controlada pelo App para o painel também ler e trocar. */
   artwork: ArtworkController
+  /** Abre um arquivo de cena ou de predefinições solto no palco. */
+  onOpenFile: (file: File) => Promise<OpenResult>
+  /** Um arquivo .json está sendo aberto. */
+  isOpeningFile: boolean
   onToggleAutoRotate: () => void
   onOpenPreferences: () => void
   /** Duplo clique no palco, para voltar à vista Inicial (só com mouse ou trackpad). */
@@ -45,6 +51,21 @@ function hasFiles(event: DragEvent) {
   return event.dataTransfer.types.includes('Files')
 }
 
+/**
+ * O que o aviso de soltar diz, pelo tipo dos itens arrastados. Nem todo
+ * navegador conta o tipo antes de soltar (e no Windows um .json pode vir sem
+ * tipo): aí vale o texto que serve para os dois.
+ */
+function dropLabel({ items }: DataTransfer) {
+  if (items.length > 1) return 'Solte um arquivo por vez'
+  const type = items[0]?.type ?? ''
+  if (type.startsWith('image/')) return 'Solte para aplicar a arte'
+  if (type === 'application/json') return 'Solte para abrir o arquivo'
+  return 'Solte a imagem ou o arquivo de cena'
+}
+
+type FileNotice = { tone: 'error' | 'info'; text: string }
+
 export function Viewer({
   sceneRef,
   model,
@@ -52,6 +73,8 @@ export function Viewer({
   viewMenu,
   settings,
   artwork,
+  onOpenFile,
+  isOpeningFile,
   onToggleAutoRotate,
   onOpenPreferences,
   onResetView,
@@ -61,6 +84,8 @@ export function Viewer({
   const [isSceneReady, setIsSceneReady] = useState(false)
   // Conta entradas e saídas, já que dragleave também dispara ao passar sobre os filhos
   const [dragDepth, setDragDepth] = useState(0)
+  const [dragLabel, setDragLabel] = useState('')
+  const [fileNotice, setFileNotice] = useState<FileNotice | null>(null)
   const { error, isProcessing, selectArtwork, resetArtwork, dismissError } = artwork
   const artworkUrl = artwork.artwork?.url ?? null
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -75,18 +100,36 @@ export function Viewer({
   }
 
   function handleDragEnter(event: DragEvent) {
-    if (hasFiles(event)) setDragDepth((depth) => depth + 1)
+    if (!hasFiles(event)) return
+    if (dragDepth === 0) setDragLabel(dropLabel(event.dataTransfer))
+    setDragDepth((depth) => depth + 1)
   }
 
   function handleDragLeave(event: DragEvent) {
     if (hasFiles(event)) setDragDepth((depth) => Math.max(0, depth - 1))
   }
 
-  function handleDrop(event: DragEvent) {
+  async function handleDrop(event: DragEvent) {
     event.preventDefault()
     setDragDepth(0)
-    const file = event.dataTransfer.files[0]
-    if (file) selectArtwork(file)
+    setFileNotice(null)
+    const { files } = event.dataTransfer
+    // Uma imagem e uma cena juntas não têm uma leitura óbvia: nada muda
+    if (files.length > 1) {
+      setFileNotice({ tone: 'error', text: 'Solte um arquivo por vez.' })
+      return
+    }
+    const file = files[0]
+    if (!file) return
+    if (!isJsonFile(file)) {
+      selectArtwork(file)
+      return
+    }
+    const { kind, done, warning, error: openError } = await onOpenFile(file)
+    const problem = openError ?? warning
+    // A cena aberta aparece no palco; só as predefinições precisam de aviso
+    if (problem) setFileNotice({ tone: 'error', text: problem })
+    else if (kind === 'presets' && done) setFileNotice({ tone: 'info', text: done })
   }
 
   async function handleExport() {
@@ -104,7 +147,11 @@ export function Viewer({
   function dismissErrors() {
     dismissError()
     setExportError(null)
+    setFileNotice(null)
   }
+
+  const notice: FileNotice | null =
+    error || exportError ? { tone: 'error', text: (error ?? exportError) as string } : fileNotice
 
   return (
     <section
@@ -115,7 +162,11 @@ export function Viewer({
         {modelSelector}
         <div className="flex min-w-0 items-center gap-4">
           <p className="hidden truncate text-sm text-ink-muted pointer-fine:block">
-            {isProcessing ? 'Preparando a arte…' : 'Arraste uma imagem PNG, JPG ou WebP até a cena'}
+            {isProcessing
+              ? 'Preparando a arte…'
+              : isOpeningFile
+                ? 'Abrindo o arquivo…'
+                : 'Arraste uma imagem PNG, JPG ou WebP ou um arquivo .json até a cena'}
           </p>
           {viewMenu}
         </div>
@@ -145,11 +196,11 @@ export function Viewer({
 
         {dragDepth > 0 && (
           <div className="pointer-events-none absolute inset-3 z-10 grid place-items-center rounded-control border-2 border-dashed border-ink bg-surface/85 transition-opacity duration-150 starting:opacity-0">
-            <p className="text-base font-semibold">Solte para aplicar a arte</p>
+            <p className="text-base font-semibold">{dragLabel}</p>
           </div>
         )}
 
-        <Notice message={error ?? exportError} onDismiss={dismissErrors} />
+        <Notice message={notice?.text ?? null} tone={notice?.tone} onDismiss={dismissErrors} />
       </div>
 
       <div className="flex shrink-0 gap-1 sm:justify-between sm:gap-2 landscape-short:col-start-2 landscape-short:row-span-2 landscape-short:row-start-1 landscape-short:flex-col landscape-short:border-l landscape-short:border-line landscape-short:bg-chrome landscape-short:pt-2 landscape-short:pb-safe-2 landscape-short:pl-2 landscape-short:pr-[max(--spacing(2),env(safe-area-inset-right))]">

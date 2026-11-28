@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react'
-import { PiWarningCircle, PiX } from 'react-icons/pi'
+import { PiCheckCircle, PiWarningCircle, PiX } from 'react-icons/pi'
 
 const AUTO_DISMISS_MS = 6000
 
 interface NoticeProps {
   message: string | null
+  /** Erro (o padrão) ou um aviso neutro de que algo deu certo sem mudar a cena. */
+  tone?: 'error' | 'info'
   onDismiss: () => void
 }
 
 /**
- * Aviso de erro sobre a cena. Some sozinho depois de alguns segundos, exceto
+ * Aviso sobre a cena. Some sozinho depois de alguns segundos, exceto
  * enquanto o ponteiro ou o foco estiverem nele, para dar tempo de ler.
  */
-export function Notice({ message, onDismiss }: NoticeProps) {
+export function Notice({ message, tone = 'error', onDismiss }: NoticeProps) {
+  const isError = tone === 'error'
+
   const [isHeld, setIsHeld] = useState(false)
 
   useEffect(() => {
@@ -29,9 +33,15 @@ export function Notice({ message, onDismiss }: NoticeProps) {
           onPointerLeave={() => setIsHeld(false)}
           onFocus={() => setIsHeld(true)}
           onBlur={() => setIsHeld(false)}
-          className="pointer-events-auto flex max-w-md items-start gap-2.5 rounded-control border border-danger-line bg-danger-surface py-2 pr-1.5 pl-3 text-sm text-ink shadow-raised transition-[opacity,translate] duration-200 ease-snappy starting:-translate-y-1 starting:opacity-0"
+          className={`pointer-events-auto flex max-w-md items-start gap-2.5 rounded-control border py-2 pr-1.5 pl-3 text-sm text-ink shadow-raised transition-[opacity,translate] duration-200 ease-snappy starting:-translate-y-1 starting:opacity-0 ${
+            isError ? 'border-danger-line bg-danger-surface' : 'border-line bg-surface'
+          }`}
         >
-          <PiWarningCircle aria-hidden className="mt-0.5 size-4.5 shrink-0 text-danger" />
+          {isError ? (
+            <PiWarningCircle aria-hidden className="mt-0.5 size-4.5 shrink-0 text-danger" />
+          ) : (
+            <PiCheckCircle aria-hidden className="mt-0.5 size-4.5 shrink-0 text-ink-muted" />
+          )}
           <p className="py-px">{message}</p>
           <button
             type="button"

@@ -99,6 +99,8 @@ export function App() {
           onResetView={hasShortcuts ? () => selectView('initial') : undefined}
           settings={settings}
           artwork={artwork}
+          onOpenFile={sceneFile.openFile}
+          isOpeningFile={sceneFile.isOpening}
           onToggleAutoRotate={() => updateSettings({ autoRotate: !settings.autoRotate })}
           onOpenPreferences={openPreferences}
         />

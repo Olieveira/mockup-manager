@@ -19,6 +19,8 @@ interface SceneFileOptions {
 
 /** Resultado de abrir um arquivo, para quem abriu mostrar onde estiver. */
 export interface OpenResult {
+  /** O que o arquivo trazia, quando ele pôde ser lido. */
+  kind?: 'scene' | 'presets'
   /** O que foi aberto, quando deu certo. */
   done?: string
   /** Deu certo, mas com um aviso (a arte do arquivo não pôde ser usada). */
@@ -73,8 +75,8 @@ export function useSceneFile({ model, settings, artwork, presets, loadScene }: S
     try {
       const opened = await readSceneFile(file)
       if (opened.kind === 'presets') {
-        if (!opened.presets.length) return { error: 'Nenhuma predefinição válida neste arquivo.' }
-        return { done: presetsSummary(presets.importPresets(opened.presets)) }
+        if (!opened.presets.length) return { kind: 'presets', error: 'Nenhuma predefinição válida neste arquivo.' }
+        return { kind: 'presets', done: presetsSummary(presets.importPresets(opened.presets)) }
       }
 
       const { scene } = opened
@@ -93,8 +95,8 @@ export function useSceneFile({ model, settings, artwork, presets, loadScene }: S
       if (prepared) artwork.applyArtwork(prepared)
       else if (prepared === null) artwork.resetArtwork()
       return isArtworkInvalid
-        ? { warning: 'Cena aberta, mas a arte do arquivo não pôde ser usada. A arte atual continua.' }
-        : { done: 'Cena aberta.' }
+        ? { kind: 'scene', warning: 'Cena aberta, mas a arte do arquivo não pôde ser usada. A arte atual continua.' }
+        : { kind: 'scene', done: 'Cena aberta.' }
     } catch (cause) {
       return { error: cause instanceof SceneFileError ? cause.message : 'Não foi possível abrir o arquivo.' }
     } finally {
