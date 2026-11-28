@@ -4,7 +4,6 @@ import type { Object3D } from 'three'
 import { useArtworkTexture } from '../useArtworkTexture'
 import { buildPrintModel, PRINT_PART } from './materials'
 import { useBuiltModel } from './useBuiltModel'
-import { useFacingCamera } from './useFacingCamera'
 import type { ModelProps } from './types'
 
 /** Gerado por scripts/models/packagingBox.mjs, em metros e com a frente em +z. */
@@ -16,8 +15,6 @@ const MODEL_URL = '/caixa.glb'
 const DEFAULT_ARTWORK = '/caixa-exemplo.webp'
 /** Nesta escala a caixa ocupa o palco como os outros modelos. */
 const SCALE = 1400
-/** Giro além de ficar de frente para a câmera, para uma das laterais aparecer. */
-const SIDE_TURN = 0.6
 /**
  * Diferença de proporção aceita para tratar a imagem como a faca inteira. Cobre
  * a sangria de 3mm em volta e o arredondamento de quem exporta em pixels.
@@ -64,10 +61,8 @@ export function PackagingBoxModel({ artworkUrl }: ModelProps) {
 
   const artwork = useArtworkTexture(url, options)
   const model = useBuiltModel(buildPrintModel, scene, artwork)
-  // A frente é a face principal: a caixa entra virada para a câmera
-  const facing = useFacingCamera(SIDE_TURN)
 
-  return <primitive object={model} scale={SCALE} rotation-y={facing} />
+  return <primitive object={model} scale={SCALE} />
 }
 
 useGLTF.preload(MODEL_URL)

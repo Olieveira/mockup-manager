@@ -11,6 +11,7 @@
 - Upload de **imagem personalizada** (PNG, JPG ou WebP) pelo botão ou arrastando o arquivo para a cena
 - **Exportação da cena atual** como imagem PNG (em celulares abre o compartilhamento nativo)
 - **Controle de rotação** automática e velocidade
+- **Vistas da câmera** pelo botão Vista: Inicial (três quartos), Frente, Esquerda, Direita e Cima, com troca animada que mantém o zoom. No desktop, também pelas teclas 1 a 5 e por duplo clique no palco para a Inicial
 - Escolha de **cor de fundo sólida** ou ambiente HDRI (cidade, estúdio, etc.), com desfoque opcional do fundo
 - **Controles de luz**: intensidade e rotação do cenário, exposição, luz principal e sombra de contato sob o modelo, com botão para restaurar o padrão. Tudo sai igual na imagem exportada
 - **Predefinições de cena**: fundo, luz e giro salvos com um nome no topo do painel de ajustes, para aplicar de novo em qualquer modelo e arte
@@ -34,12 +35,12 @@
 
 ## Estrutura do Projeto
 
-- `src/components/`: componentes da interface (header, viewer, seletor de modelo, biblioteca de modelos, painel de ajustes com as predefinições de cena, seletor de tema, aviso de falha da cena)
+- `src/components/`: componentes da interface (header, viewer, seletor de modelo, menu das vistas, biblioteca de modelos, painel de ajustes com as predefinições de cena, seletor de tema, aviso de falha da cena)
 - `src/components/ui/`: componentes reutilizáveis (botões, dicas, avisos, controles deslizantes, chips, régua de carregamento e o painel lateral em `<dialog>` usado pelos ajustes e pela biblioteca)
 - `src/components/brand/`: slot do logo
-- `src/components/scene/`: cena 3D, textura da arte e progresso de carregamento
-- `src/components/scene/models/`: modelos 3D (Blister, Caneca, Quadro, Caixa), nome, ordem e miniatura em `catalog.ts` e carregamento sob demanda em `index.ts`
-- `src/config/`: marca (`brand.ts`), tema, opções iniciais da cena, padrões e limites da luz e lista de cenários HDRI (`scene.ts`) e a media query do celular deitado (`layout.ts`)
+- `src/components/scene/`: cena 3D, textura da arte, progresso de carregamento e câmera (controles de órbita e troca de vista em `CameraRig.tsx`, posição de cada vista em `cameraOrbit.ts`)
+- `src/components/scene/models/`: modelos 3D (Blister, Caneca, Quadro, Caixa), nome, ordem, giro da frente e miniatura em `catalog.ts` e carregamento sob demanda em `index.ts`
+- `src/config/`: marca (`brand.ts`), tema, opções iniciais da cena, padrões e limites da luz e lista de cenários HDRI (`scene.ts`), vistas da câmera e as teclas delas (`cameraViews.ts`) e as media queries que o React precisa conhecer: celular deitado, tela estreita e mouse (`layout.ts`)
 - `src/hooks/`: hooks da aplicação
 - `src/lib/`: funções sem React (processamento da arte, exportação, tema e o que fica salvo no navegador: estado da cena e predefinições em `sceneStorage.ts`, última arte em `artworkStore.ts`)
 - `src/index.css`: tokens de cor, raio, sombra e tipografia, utilitários de safe area (`px-safe-*`, `pb-safe-*`, `pt-safe`) e a variante `landscape-short:` para celular deitado (a mesma query fica em `config/layout.ts`; mantenha as duas iguais)
@@ -52,13 +53,13 @@
 - `public/hdri/`: cenários HDRI (`.hdr` em 1k)
 - `public/thumbnails/`: miniaturas dos modelos (`<id>.webp`, 320px), geradas por `npm run thumbnails`
 
-Para adicionar um modelo, crie o componente em `src/components/scene/models/`, inclua o nome em `catalog.ts` e o carregamento em `index.ts`. O TypeScript acusa se um dos dois ficar faltando. A malha que recebe a arte deve se chamar `Arte`, e o modelo deve ficar em volta da origem com a base abaixo dela. Depois rode `npm run thumbnails` para gerar a miniatura dele.
+Para adicionar um modelo, crie o componente em `src/components/scene/models/`, inclua o nome em `catalog.ts` e o carregamento em `index.ts`. O TypeScript acusa se um dos dois ficar faltando. A malha que recebe a arte deve se chamar `Arte`, e o modelo deve ficar em volta da origem com a base abaixo dela. No catálogo, `frontTurn` é o giro em y (em graus) que leva a frente do modelo, o lado em que a arte fica reta, para +z; `initialAngle` muda o ângulo da vista Inicial quando os três quartos padrão (35°) não servem. Depois rode `npm run thumbnails` para gerar a miniatura dele.
 
 A arte padrão da caixa (`public/caixa-exemplo.webp`) é a faca planificada inteira de um chá fictício, na proporção exata da faca, para a caixa abrir com as seis faces impressas. Ela é desenhada em SVG sobre as mesmas medidas do modelo (`scripts/models/packagingBoxDie.mjs`) e convertida para webp no Chromium por `npm run artwork`. Uma arte enviada na mesma proporção também cobre a caixa inteira; qualquer outra vai só na frente.
 
 O quadro e a caixa não vêm de um programa 3D: eles são gerados por `scripts/models/canvasPrint.mjs` e `scripts/models/packagingBox.mjs` (`npm run models`), que montam a geometria com o three, calculam o UV da arte e exportam `public/quadro.glb` e `public/caixa.glb` com o `GLTFExporter`. Para mudar medidas ou materiais, edite o script e rode o comando de novo. Os `.glb` gerados ficam versionados.
 
-As miniaturas da biblioteca são imagens, e não cenas 3D, para a biblioteca não puxar o three para o pacote inicial. `npm run thumbnails` sobe o app com o servidor do Vite, passa por cada modelo do catálogo na vista inicial do desktop, sobre fundo cinza claro e com a arte padrão, e grava um webp por modelo. Ele usa o `playwright-core` e o Chromium instalado pelo Playwright (`npx playwright-core install --only-shell chromium`) ou o caminho em `CHROMIUM_PATH`. O WebGL roda por software, então leva uns 30 segundos. As miniaturas ficam versionadas: gere de novo quando mudar um modelo, a arte padrão ou a luz.
+As miniaturas da biblioteca são imagens, e não cenas 3D, para a biblioteca não puxar o three para o pacote inicial. `npm run thumbnails` sobe o app com o servidor do Vite, passa por cada modelo do catálogo na vista Inicial dele no desktop, sobre fundo cinza claro e com a arte padrão, e grava um webp por modelo. Ele usa o `playwright-core` e o Chromium instalado pelo Playwright (`npx playwright-core install --only-shell chromium`) ou o caminho em `CHROMIUM_PATH`. O WebGL roda por software, então leva uns 30 segundos. As miniaturas ficam versionadas: gere de novo quando mudar um modelo, a arte padrão ou a luz.
 
 ---
 
@@ -124,10 +125,12 @@ Outros scripts:
 - Os cenários HDRI são servidos pelo próprio app, de `public/hdri/`, e só baixam quando escolhidos. São os mesmos dos presets do drei, da [Poly Haven](https://polyhaven.com/) (CC0). Para incluir outro, coloque o `.hdr` na pasta e adicione o nome em `ENVIRONMENT_PRESETS`.
 - A cena 3D (three, R3F e drei) e cada modelo ficam em chunks separados, baixados depois que a interface aparece. O pacote inicial tem cerca de 80KB com gzip. Depois que a primeira cena fica pronta, os outros modelos são baixados em segundo plano.
 - Ao trocar de modelo, cenário ou arte, a cena anterior continua na tela até a nova carregar, com o progresso num canto do palco.
-- Com o celular deitado (paisagem com até 500px de altura), o seletor de modelo sobe para a barra do cabeçalho e as ações viram um trilho vertical à direita, para o palco ganhar altura. O seletor muda de lugar no DOM, e não só na tela, para a ordem do Tab seguir a ordem visual.
+- Com o celular deitado (paisagem com até 500px de altura), o seletor de modelo e o botão Vista sobem para a barra do cabeçalho e as ações viram um trilho vertical à direita, para o palco ganhar altura. Eles mudam de lugar no DOM, e não só na tela, para a ordem do Tab seguir a ordem visual.
+- Os modelos ficam parados, com a frente em +z: quem dá a volta é a câmera. As vistas são posições na órbita em volta do centro, e a troca anda pela órbita (e não em linha reta, que passaria por dentro do modelo). Escolher uma vista desliga o giro automático; arrastar ou dar zoom no meio da troca a interrompe; com movimento reduzido no sistema, a câmera vai direto. Não há vista de baixo: a câmera não desce do chão. Na caneca, a frente é o centro da arte, do lado oposto à alça, onde fica uma arte centrada; a vista Inicial dela gira mais (70°) para a alça aparecer à direita.
 - A cena só é redesenhada quando algo muda (arrastar, giro automático, troca de modelo, cenário, arte ou ajuste). Parada, ela não gasta GPU nem bateria. Código que altera o renderer ou a cena fora dos componentes do R3F precisa chamar `invalidate()`.
-- No quadro, a arte cobre a frente e dobra nas quatro bordas, como na impressão em tela esticada: a imagem inteira equivale à frente mais uma faixa de 3cm em volta. Se a proporção da imagem for diferente, ela é recortada no centro em vez de esticada, e o que for transparente no PNG sai branco, como a tela. O quadro entra virado para a câmera, já que só a frente tem arte.
+- No quadro, a arte cobre a frente e dobra nas quatro bordas, como na impressão em tela esticada: a imagem inteira equivale à frente mais uma faixa de 3cm em volta. Se a proporção da imagem for diferente, ela é recortada no centro em vez de esticada, e o que for transparente no PNG sai branco, como a tela. A vista Frente mostra a arte reta.
 - A caixa é um cartucho de 9 x 4 x 14cm com fechamento reverso, e o UV dela segue a faca planificada de 275 x 250mm, vista do lado impresso. Na faixa do meio, da esquerda para a direita: aba de cola (15mm), lateral, frente, lateral e verso. A tampa sai de cima do verso e o fundo de baixo da frente, cada um com uma lingueta de 15mm. Uma arte nessa proporção (com até 4% de diferença, para caber a sangria) cobre a caixa inteira. Qualquer outra imagem vai só na frente, recortada no centro sem distorcer, e o resto da caixa fica branco.
+- Os painéis de ajustes e da biblioteca não bloqueiam o palco no desktop e com o celular deitado: dá para girar o modelo e trocar a vista com eles abertos, e clicar fora não fecha. O Esc fecha (também depois de um clique no palco) e o foco volta ao botão que abriu o painel. No desktop o painel acompanha a altura do palco, para a linha de cima e a barra de ações continuarem à mão. No celular em pé, a folha inferior é modal e fecha com um toque fora. Um painel aberto fecha o outro.
 - A biblioteca de modelos fica no mesmo painel lateral dos ajustes e não escurece a cena: escolher um modelo troca o mockup na hora e o painel continua aberto. No celular em pé ela é uma folha baixa com uma fileira que rola para o lado, para o palco continuar à vista; deitado, uma coluna sobre o trilho. Os cartões são rádios nativos: o Tab entra no modelo atual, as setas trocam e o Esc fecha.
 - A sombra de contato é desenhada uma vez por modelo e acompanha a base dele pelo tamanho medido na cena. Ela fica centrada no eixo da cena, então novos modelos devem ficar em volta da origem com a base abaixo dela.
 

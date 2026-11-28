@@ -2,7 +2,7 @@
  * Gera as miniaturas da biblioteca de modelos em public/thumbnails/<id>.webp.
  *
  * Sobe o app com o servidor do Vite, abre no Chromium do Playwright e passa por
- * cada modelo do catálogo na vista inicial do desktop, sobre fundo cinza claro
+ * cada modelo do catálogo na vista Inicial dele no desktop, sobre fundo cinza claro
  * e com a arte padrão. Cada palco é capturado, recortado em quadrado e
  * convertido para webp no próprio navegador. As miniaturas são imagens, e não
  * cenas 3D, para a biblioteca não puxar o three para o pacote inicial.
@@ -59,6 +59,9 @@ try {
       await page.getByRole('button', { name: 'Próximo mockup' }).click()
       await page.mouse.move(0, 0)
     }
+    // A câmera fica onde estava ao trocar de modelo: a tecla 1 a leva para a
+    // vista Inicial deste, que pode ter um ângulo próprio (como a caneca)
+    await page.keyboard.press('1')
     await page.waitForFunction((label) => document.body.innerText.includes(label), MODEL_CATALOG[id].label)
     await waitForStage(page)
 
