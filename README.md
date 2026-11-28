@@ -13,8 +13,9 @@
 - **Controle de rotação** automática e velocidade
 - **Vistas da câmera** pelo botão Vista: Inicial (três quartos), Frente, Esquerda, Direita e Cima, com troca animada que mantém o zoom. No desktop, também pelas teclas 1 a 5 e por duplo clique no palco para a Inicial
 - Escolha de **cor de fundo sólida** ou ambiente HDRI (cidade, estúdio, etc.), com desfoque opcional do fundo
-- **Controles de luz**: intensidade e rotação do cenário, exposição, luz principal e sombra de contato sob o modelo, com botão para restaurar o padrão. Tudo sai igual na imagem exportada
+- **Controles de luz**: intensidade e rotação do cenário, exposição, luz principal e sombra de contato sob o modelo (com opacidade, suavidade, alcance e tamanho), com botão para restaurar o padrão. Tudo sai igual na imagem exportada
 - **Predefinições de cena**: fundo, luz e giro salvos com um nome no topo do painel de ajustes, para aplicar de novo em qualquer modelo e arte
+- **Arquivo de cena** (.json): modelo, ajustes e, se quiser, a arte embutida, para abrir depois ou em outro aparelho. As predefinições também saem num arquivo à parte. Abre pelo botão na seção Arquivo do painel ou soltando o arquivo no palco
 - **A cena volta como estava** ao recarregar a página: ajustes, modelo escolhido e a última arte enviada ficam salvos no navegador até a arte ser redefinida
 - **Tema claro, escuro ou do sistema**, com a escolha salva no navegador
 - Interface adaptável e responsiva, navegável pelo teclado
@@ -42,7 +43,7 @@
 - `src/components/scene/models/`: modelos 3D (Blister, Caneca, Quadro, Caixa), nome, ordem, giro da frente e miniatura em `catalog.ts` e carregamento sob demanda em `index.ts`
 - `src/config/`: marca (`brand.ts`), tema, opções iniciais da cena, padrões e limites da luz e lista de cenários HDRI (`scene.ts`), vistas da câmera e as teclas delas (`cameraViews.ts`) e as media queries que o React precisa conhecer: celular deitado, tela estreita e mouse (`layout.ts`)
 - `src/hooks/`: hooks da aplicação
-- `src/lib/`: funções sem React (processamento da arte, exportação, tema e o que fica salvo no navegador: estado da cena e predefinições em `sceneStorage.ts`, última arte em `artworkStore.ts`)
+- `src/lib/`: funções sem React (processamento da arte, exportação, tema e o que fica salvo no navegador: estado da cena e predefinições em `sceneStorage.ts`, última arte em `artworkStore.ts`; arquivos de cena e de predefinições em `sceneFile.ts`)
 - `src/index.css`: tokens de cor, raio, sombra e tipografia, utilitários de safe area (`px-safe-*`, `pb-safe-*`, `pt-safe`) e a variante `landscape-short:` para celular deitado (a mesma query fica em `config/layout.ts`; mantenha as duas iguais)
 - `vite/`: plugin que preenche o `index.html` com os dados da marca
 - `scripts/models/`: geradores de modelos por código, que montam a geometria com o three e exportam o `.glb` para `public/`, e as medidas da faca da caixa (`packagingBoxDie.mjs`)
@@ -120,10 +121,25 @@ Outros scripts:
 ## Observações
 
 - O projeto é **100% client-side**, sem backend. O que fica salvo (tema, ajustes da cena, modelo, predefinições e a última arte) fica só no navegador: os textos no `localStorage` e a arte no IndexedDB, que guarda o arquivo como ele é. Um valor salvo inválido ou de outra versão volta ao padrão, campo a campo. Fora de um app instalado na tela de início, o Safari apaga esses dados de sites que ficam 7 dias sem ser abertos.
+- O arquivo de cena usa o mesmo envelope do que fica salvo no navegador, com o tipo do conteúdo:
+
+  ```json
+  {
+    "type": "mockup-viewer/scene",
+    "version": 1,
+    "data": {
+      "model": "packagingBox",
+      "settings": { "backgroundMode": "preset", "environment": "studio", "shadowOpacity": 0.5, "...": "..." },
+      "artwork": { "mediaType": "image/png", "base64": "iVBORw0KGgo..." }
+    }
+  }
+  ```
+
+  Sem `artwork`, a arte não foi incluída e a que está na tela continua; com `artwork: null`, a cena usa a arte de exemplo do modelo. O arquivo de predefinições tem `"type": "mockup-viewer/presets"` e a lista em `data`; ao abrir, uma predefinição com o mesmo nome de outra é substituída. Um arquivo de outro tipo ou de outra versão é recusado com um aviso, sem mexer na cena; dentro de um arquivo aceito, o campo inválido volta ao padrão e um modelo desconhecido deixa o atual. Campos novos (como o posicionamento da arte) entram sem mudar a versão, porque a leitura é campo a campo. A arte embutida ocupa um terço a mais que a imagem (o tamanho aparece antes de exportar) e passa pelas mesmas checagens de um envio; o arquivo pode ter até 32MB. Solte um arquivo por vez no palco: uma imagem e uma cena juntas não mudam nada.
 - Imagens enviadas são aceitas com até **25MB** e redimensionadas para no máximo 2048px no navegador.
 - A exportação gera a imagem **com base na visualização atual** da cena 3D.
 - Os cenários HDRI são servidos pelo próprio app, de `public/hdri/`, e só baixam quando escolhidos. São os mesmos dos presets do drei, da [Poly Haven](https://polyhaven.com/) (CC0). Para incluir outro, coloque o `.hdr` na pasta e adicione o nome em `ENVIRONMENT_PRESETS`.
-- A cena 3D (three, R3F e drei) e cada modelo ficam em chunks separados, baixados depois que a interface aparece. O pacote inicial tem cerca de 80KB com gzip. Depois que a primeira cena fica pronta, os outros modelos são baixados em segundo plano.
+- A cena 3D (three, R3F e drei) e cada modelo ficam em chunks separados, baixados depois que a interface aparece. O pacote inicial tem cerca de 87KB com gzip. Depois que a primeira cena fica pronta, os outros modelos são baixados em segundo plano.
 - Ao trocar de modelo, cenário ou arte, a cena anterior continua na tela até a nova carregar, com o progresso num canto do palco.
 - Com o celular deitado (paisagem com até 500px de altura), o seletor de modelo e o botão Vista sobem para a barra do cabeçalho e as ações viram um trilho vertical à direita, para o palco ganhar altura. Eles mudam de lugar no DOM, e não só na tela, para a ordem do Tab seguir a ordem visual.
 - Os modelos ficam parados, com a frente em +z: quem dá a volta é a câmera. As vistas são posições na órbita em volta do centro, e a troca anda pela órbita (e não em linha reta, que passaria por dentro do modelo). Escolher uma vista desliga o giro automático; arrastar ou dar zoom no meio da troca a interrompe; com movimento reduzido no sistema, a câmera vai direto. Não há vista de baixo: a câmera não desce do chão. Na caneca, a frente é o centro da arte, do lado oposto à alça, onde fica uma arte centrada; a vista Inicial dela gira mais (70°) para a alça aparecer à direita.
@@ -132,14 +148,15 @@ Outros scripts:
 - A caixa é um cartucho de 9 x 4 x 14cm com fechamento reverso, e o UV dela segue a faca planificada de 275 x 250mm, vista do lado impresso. Na faixa do meio, da esquerda para a direita: aba de cola (15mm), lateral, frente, lateral e verso. A tampa sai de cima do verso e o fundo de baixo da frente, cada um com uma lingueta de 15mm. Uma arte nessa proporção (com até 4% de diferença, para caber a sangria) cobre a caixa inteira. Qualquer outra imagem vai só na frente, recortada no centro sem distorcer, e o resto da caixa fica branco.
 - Os painéis de ajustes e da biblioteca não bloqueiam o palco no desktop e com o celular deitado: dá para girar o modelo e trocar a vista com eles abertos, e clicar fora não fecha. O Esc fecha (também depois de um clique no palco) e o foco volta ao botão que abriu o painel. No desktop o painel acompanha a altura do palco, para a linha de cima e a barra de ações continuarem à mão. No celular em pé, a folha inferior é modal e fecha com um toque fora. Um painel aberto fecha o outro.
 - A biblioteca de modelos fica no mesmo painel lateral dos ajustes e não escurece a cena: escolher um modelo troca o mockup na hora e o painel continua aberto. No celular em pé ela é uma folha baixa com uma fileira que rola para o lado, para o palco continuar à vista; deitado, uma coluna sobre o trilho. Os cartões são rádios nativos: o Tab entra no modelo atual, as setas trocam e o Esc fecha.
-- A sombra de contato é desenhada uma vez por modelo e acompanha a base dele pelo tamanho medido na cena. Ela fica centrada no eixo da cena, então novos modelos devem ficar em volta da origem com a base abaixo dela.
+- A sombra de contato é desenhada uma vez e de novo só quando o modelo ou um ajuste dela muda, e acompanha a base pelo tamanho medido na cena. O alcance e o tamanho são proporções do modelo, para a mesma predefinição servir em todos. Ela fica centrada no eixo da cena, então novos modelos devem ficar em volta da origem com a base abaixo dela (o alcance não desce de 50%, a distância da base até a origem nos modelos atuais, porque o desfoque precisa enxergar a origem).
 
 ---
 
 ## Próximos passos
 
 - Integração com sistema de vendas (mockups vinculados a produtos)
-- Possibilidade de salvar e carregar predefinições de cenas
+- Link compartilhável da cena
+- Sombra deslocada, como a de uma luz direcional
 - Mais modelos gerados por código, como garrafa
 - Galeria de cenas geradas
 - Geração automática de mp4
