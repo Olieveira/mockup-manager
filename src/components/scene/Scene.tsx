@@ -1,22 +1,24 @@
-import { Suspense, useCallback, useDeferredValue, useEffect, useImperativeHandle, useMemo, useState } from 'react'
-import type { Ref } from 'react'
+import { Suspense, useCallback, useDeferredValue, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type { Ref, RefObject } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
-import { ContactShadows, Environment, OrbitControls, useTexture } from '@react-three/drei'
+import { ContactShadows, Environment, useTexture } from '@react-three/drei'
 import { Box3, MathUtils } from 'three'
 import type { Group } from 'three'
 import { getEnvironmentPreset } from '../../config/scene'
 import type { EnvironmentPreset, LightingSettings, SceneSettings } from '../../config/scene'
+import type { CameraView } from '../../config/cameraViews'
 import { StageProgress } from '../ui/StageProgress'
 import { MODEL_CATALOG, MODEL_IDS } from './models/catalog'
 import type { ModelId } from './models/catalog'
 import { MODEL_COMPONENTS, preloadModel } from './models'
-import { getInitialOrbit, orbitToPosition } from './cameraOrbit'
+import { getDevice, getInitialOrbit, orbitToPosition } from './cameraOrbit'
+import { CameraRig } from './CameraRig'
+import type { CameraRigHandle } from './CameraRig'
 import { useLoadingProgress } from './useLoadingProgress'
 
 type Vector3Tuple = [number, number, number]
 
 const CAMERA_FOV = 50
-const MOBILE_QUERY = '(max-width: 767px)'
 const LIGHT_INTENSITY = 0.6
 const LIGHT_POSITIONS: Vector3Tuple[] = [
   [100, 100, 100],
@@ -31,6 +33,8 @@ const SHADOW_MARGIN = 1.5
 export interface SceneHandle {
   /** Renderiza o quadro atual e o devolve como imagem PNG. */
   capture: () => Promise<Blob>
+  /** Leva a câmera até a vista, animando o caminho. */
+  setView: (view: CameraView) => void
 }
 
 export interface SceneProps {
@@ -93,7 +97,13 @@ function ModelShadow({ bounds }: { bounds: Box3 }) {
   )
 }
 
-function SceneCapture({ ref }: { ref?: Ref<SceneHandle> }) {
+interface SceneBridgeProps {
+  ref?: Ref<SceneHandle>
+  rig: RefObject<CameraRigHandle | null>
+}
+
+/** O que a interface pode pedir à cena de fora do Canvas. */
+function SceneBridge({ ref, rig }: SceneBridgeProps) {
   const gl = useThree((state) => state.gl)
   const scene = useThree((state) => state.scene)
   const camera = useThree((state) => state.camera)
@@ -110,8 +120,9 @@ function SceneCapture({ ref }: { ref?: Ref<SceneHandle> }) {
         const response = await fetch(dataUrl)
         return response.blob()
       },
+      setView: (view) => rig.current?.setView(view),
     }),
-    [gl, scene, camera],
+    [gl, scene, camera, rig],
   )
 
   return null
@@ -219,9 +230,8 @@ function SceneContent({
  */
 export default function Scene({ ref, model, artworkUrl, settings, onReady }: SceneProps) {
   // A câmera abre na vista Inicial do primeiro modelo e depois fica com quem a move
-  const [cameraPosition] = useState(() =>
-    orbitToPosition(getInitialOrbit(model, window.matchMedia(MOBILE_QUERY).matches ? 'mobile' : 'desktop')),
-  )
+  const [cameraPosition] = useState(() => orbitToPosition(getInitialOrbit(model, getDevice())))
+  const rigRef = useRef<CameraRigHandle>(null)
   const [isReady, setIsReady] = useState(false)
   const markReady = useCallback(() => setIsReady(true), [])
   const [pending, setPending] = useState<PendingChange>(null)
@@ -264,7 +274,7 @@ export default function Scene({ ref, model, artworkUrl, settings, onReady }: Sce
             fundo pelo HDRI e devolve a cor quando sai */}
         <color attach="background" args={[settings.backgroundColor]} />
         <Exposure exposure={settings.exposure} />
-        <SceneCapture ref={ref} />
+        <SceneBridge ref={ref} rig={rigRef} />
 
         <SceneContent
           model={model}
@@ -276,14 +286,11 @@ export default function Scene({ ref, model, artworkUrl, settings, onReady }: Sce
           onPendingChange={setPending}
         />
 
-        <OrbitControls
+        <CameraRig
+          ref={rigRef}
+          model={model}
           autoRotate={settings.autoRotate}
           autoRotateSpeed={settings.rotateSpeed}
-          rotateSpeed={0.6}
-          zoomSpeed={0.5}
-          dampingFactor={0.1}
-          enablePan={false}
-          maxPolarAngle={Math.PI / 2}
         />
       </Canvas>
 

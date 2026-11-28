@@ -1,4 +1,5 @@
-import { MathUtils, Vector3 } from 'three'
+import { MathUtils, Spherical, Vector3 } from 'three'
+import type { CameraView } from '../../config/cameraViews'
 import { MODEL_CATALOG } from './models/catalog'
 import type { ModelId } from './models/catalog'
 
@@ -27,6 +28,19 @@ const OPENING = {
 
 export type Device = keyof typeof OPENING
 
+const MOBILE_QUERY = '(max-width: 767px)'
+
+/** Abertura que serve ao palco agora: o celular deitado usa a do desktop, que é largo. */
+export function getDevice(): Device {
+  return window.matchMedia(MOBILE_QUERY).matches ? 'mobile' : 'desktop'
+}
+
+/**
+ * Bem perto do polo, e não nele: exatamente no alto a câmera perde a noção de
+ * para onde é a frente. Assim a frente do modelo fica embaixo na tela.
+ */
+const TOP_POLAR = 1e-4
+
 /** Vista Inicial do modelo: três quartos e o zoom de abertura. */
 export function getInitialOrbit(model: ModelId, device: Device): Orbit {
   const { elevation, radius } = OPENING[device]
@@ -37,6 +51,42 @@ export function getInitialOrbit(model: ModelId, device: Device): Orbit {
   }
 }
 
-export function orbitToPosition({ azimuth, polar, radius }: Orbit): [number, number, number] {
-  return new Vector3().setFromSphericalCoords(radius, polar, azimuth).toArray()
+/** Órbita de cada vista. Fora a Inicial, todas mantêm a distância atual (o zoom). */
+export function getViewOrbit(view: CameraView, model: ModelId, device: Device, current: Orbit): Orbit {
+  const { radius } = current
+  switch (view) {
+    case 'initial':
+      return getInitialOrbit(model, device)
+    case 'front':
+      return { azimuth: 0, polar: Math.PI / 2, radius }
+    case 'left':
+      return { azimuth: -Math.PI / 2, polar: Math.PI / 2, radius }
+    case 'right':
+      return { azimuth: Math.PI / 2, polar: Math.PI / 2, radius }
+    case 'top':
+      return { azimuth: 0, polar: TOP_POLAR, radius }
+  }
+}
+
+/** Mistura duas órbitas, com o azimute pelo caminho mais curto. */
+export function lerpOrbit(from: Orbit, to: Orbit, t: number): Orbit {
+  const turn = MathUtils.euclideanModulo(to.azimuth - from.azimuth + Math.PI, Math.PI * 2) - Math.PI
+  return {
+    azimuth: from.azimuth + turn * t,
+    polar: MathUtils.lerp(from.polar, to.polar, t),
+    radius: MathUtils.lerp(from.radius, to.radius, t),
+  }
+}
+
+export function orbitFromOffset(offset: Vector3): Orbit {
+  const { radius, phi, theta } = new Spherical().setFromVector3(offset)
+  return { azimuth: theta, polar: phi, radius }
+}
+
+export function orbitToOffset({ azimuth, polar, radius }: Orbit, target = new Vector3()) {
+  return target.setFromSphericalCoords(radius, polar, azimuth)
+}
+
+export function orbitToPosition(orbit: Orbit): [number, number, number] {
+  return orbitToOffset(orbit).toArray()
 }
