@@ -2,7 +2,7 @@ import { Suspense, useCallback, useDeferredValue, useEffect, useImperativeHandle
 import type { Ref } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, OrbitControls, useTexture } from '@react-three/drei'
-import { Box3 } from 'three'
+import { Box3, MathUtils } from 'three'
 import type { Group } from 'three'
 import { getEnvironmentPreset } from '../../config/scene'
 import type { EnvironmentPreset, LightingSettings, SceneSettings } from '../../config/scene'
@@ -10,13 +10,12 @@ import { StageProgress } from '../ui/StageProgress'
 import { MODEL_CATALOG, MODEL_IDS } from './models/catalog'
 import type { ModelId } from './models/catalog'
 import { MODEL_COMPONENTS, preloadModel } from './models'
+import { getInitialOrbit, orbitToPosition } from './cameraOrbit'
 import { useLoadingProgress } from './useLoadingProgress'
 
 type Vector3Tuple = [number, number, number]
 
 const CAMERA_FOV = 50
-const DESKTOP_CAMERA: Vector3Tuple = [320, 100, 20]
-const MOBILE_CAMERA: Vector3Tuple = [-380, 70, 60]
 const MOBILE_QUERY = '(max-width: 767px)'
 const LIGHT_INTENSITY = 0.6
 const LIGHT_POSITIONS: Vector3Tuple[] = [
@@ -204,7 +203,8 @@ function SceneContent({
       {LIGHT_POSITIONS.map((position) => (
         <directionalLight key={position.join()} position={position} intensity={LIGHT_INTENSITY * lightIntensity} />
       ))}
-      <group key={deferredModel} ref={measureModel}>
+      {/* O modelo fica parado com a frente em +z: quem dá a volta é a câmera */}
+      <group key={deferredModel} ref={measureModel} rotation-y={MathUtils.degToRad(MODEL_CATALOG[deferredModel].frontTurn)}>
         <Model artworkUrl={deferredArtworkUrl} />
       </group>
       {contactShadow && modelBounds && <ModelShadow bounds={modelBounds} />}
@@ -218,8 +218,9 @@ function SceneContent({
  * com three, R3F e drei.
  */
 export default function Scene({ ref, model, artworkUrl, settings, onReady }: SceneProps) {
+  // A câmera abre na vista Inicial do primeiro modelo e depois fica com quem a move
   const [cameraPosition] = useState(() =>
-    window.matchMedia(MOBILE_QUERY).matches ? MOBILE_CAMERA : DESKTOP_CAMERA,
+    orbitToPosition(getInitialOrbit(model, window.matchMedia(MOBILE_QUERY).matches ? 'mobile' : 'desktop')),
   )
   const [isReady, setIsReady] = useState(false)
   const markReady = useCallback(() => setIsReady(true), [])

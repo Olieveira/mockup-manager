@@ -3,7 +3,6 @@ import type { Object3D } from 'three'
 import { useArtworkTexture } from '../useArtworkTexture'
 import { buildPrintModel, PRINT_PART } from './materials'
 import { useBuiltModel } from './useBuiltModel'
-import { useFacingCamera } from './useFacingCamera'
 import type { ModelProps } from './types'
 
 /** Gerado por scripts/models/canvasPrint.mjs, em metros e com a frente em +z. */
@@ -11,8 +10,6 @@ const MODEL_URL = '/quadro.glb'
 const DEFAULT_ARTWORK = '/flork.jpg'
 /** Nesta escala o quadro ocupa o palco como os outros modelos. */
 const SCALE = 550
-/** Giro além de ficar de frente para a câmera, para uma das bordas aparecer. */
-const SIDE_TURN = 0.45
 
 /** Proporção da área de impressão (frente mais bordas), gravada no .glb pelo script. */
 function getPrintAspect(scene: Object3D) {
@@ -26,10 +23,8 @@ export function CanvasPrintModel({ artworkUrl }: ModelProps) {
   const { scene } = useGLTF(MODEL_URL)
   const artwork = useArtworkTexture(artworkUrl ?? DEFAULT_ARTWORK, { cover: getPrintAspect(scene) })
   const model = useBuiltModel(buildPrintModel, scene, artwork)
-  // Só a frente tem arte: o quadro entra virado para a câmera
-  const facing = useFacingCamera(SIDE_TURN)
 
-  return <primitive object={model} scale={SCALE} rotation-y={facing} />
+  return <primitive object={model} scale={SCALE} />
 }
 
 useGLTF.preload(MODEL_URL)
