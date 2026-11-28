@@ -4,6 +4,7 @@ import { flushSync } from 'react-dom'
 import type { SceneSettings } from '../config/scene'
 import type { ScenePresetsController } from '../hooks/useScenePresets'
 import { isSamePresetName, isSameScene, PRESET_NAME_MAX_LENGTH } from '../lib/sceneStorage'
+import { secondaryButton } from './ui/buttons'
 import { Chip, ChipGroup } from './ui/ChipGroup'
 
 interface ScenePresetsProps {
@@ -12,9 +13,6 @@ interface ScenePresetsProps {
   controller: ScenePresetsController
   onApply: (settings: SceneSettings) => void
 }
-
-const secondaryButton =
-  'h-9 cursor-pointer rounded-control border border-line px-3 text-sm transition-colors hover:bg-fill-hover active:bg-fill-pressed'
 
 /**
  * Predefinições de cena (fundo, luz e giro) com nome, no topo do painel de

@@ -9,7 +9,9 @@ import {
   ROTATE_SPEED_RANGE,
 } from '../config/scene'
 import type { BackgroundMode, SceneSettings } from '../config/scene'
+import type { SceneFileController } from '../hooks/useSceneFile'
 import type { ScenePresetsController } from '../hooks/useScenePresets'
+import { SceneFile } from './SceneFile'
 import { ScenePresets } from './ScenePresets'
 import { Chip, ChipGroup } from './ui/ChipGroup'
 import { RangeField } from './ui/RangeField'
@@ -22,6 +24,9 @@ interface PreferencesPanelProps {
   open: boolean
   settings: SceneSettings
   presets: ScenePresetsController
+  sceneFile: SceneFileController
+  /** A arte enviada, para o arquivo de cena poder levá-la. */
+  artwork: Blob | null
   onChange: (changes: Partial<SceneSettings>) => void
   onClose: () => void
 }
@@ -64,7 +69,15 @@ const swatch =
  * rodapé ficam fixos e só os ajustes rolam, para Concluir estar sempre à mão
  * mesmo na folha do celular e com ele deitado.
  */
-export function PreferencesPanel({ open, settings, presets, onChange, onClose }: PreferencesPanelProps) {
+export function PreferencesPanel({
+  open,
+  settings,
+  presets,
+  sceneFile,
+  artwork,
+  onChange,
+  onClose,
+}: PreferencesPanelProps) {
   const isCustomColor = !SWATCH_COLORS.includes(settings.backgroundColor)
   const isLightingDefault = isDefaultLighting(settings)
 
@@ -233,6 +246,11 @@ export function PreferencesPanel({ open, settings, presets, onChange, onClose }:
             onChange={(rotateSpeed) => onChange({ rotateSpeed })}
             disabled={!settings.autoRotate}
           />
+        </Section>
+
+        <Section title="Arquivo">
+          {/* Volta ao estado inicial a cada vez que o painel abre, sem o aviso da última vez */}
+          <SceneFile key={String(open)} controller={sceneFile} artwork={artwork} />
         </Section>
       </div>
 

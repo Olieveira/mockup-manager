@@ -3,6 +3,7 @@ import { MODEL_IDS } from '../components/scene/models/catalog'
 import type { ModelId } from '../components/scene/models/catalog'
 import type { SceneSettings } from '../config/scene'
 import { readSceneState, writeSceneState } from '../lib/sceneStorage'
+import type { SceneState } from '../lib/sceneStorage'
 
 /** Espera os controles deslizantes pararem antes de gravar, em vez de gravar a cada passo. */
 const SAVE_DELAY_MS = 400
@@ -38,6 +39,9 @@ export function useSceneState() {
     setState((current) => ({ ...current, model }))
   }, [])
 
+  /** Troca a cena inteira de uma vez, como ao abrir um arquivo. */
+  const loadScene = useCallback((scene: SceneState) => setState(scene), [])
+
   /** Passa para o modelo vizinho no catálogo, em ciclo. */
   const stepModel = useCallback((step: number) => {
     setState((current) => {
@@ -46,5 +50,5 @@ export function useSceneState() {
     })
   }, [])
 
-  return { settings: state.settings, model: state.model, updateSettings, selectModel, stepModel }
+  return { settings: state.settings, model: state.model, updateSettings, selectModel, stepModel, loadScene }
 }

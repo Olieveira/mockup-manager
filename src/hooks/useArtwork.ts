@@ -45,6 +45,15 @@ export function useArtwork() {
     return () => URL.revokeObjectURL(artworkUrl)
   }, [artworkUrl])
 
+  /** Aplica e salva uma arte que já passou por prepareArtwork, descartando a que ainda estava em preparo. */
+  const applyArtwork = useCallback((blob: Blob) => {
+    lastRequest.current++
+    setIsProcessing(false)
+    setError(null)
+    setArtwork(toArtwork(blob))
+    storeArtwork(blob)
+  }, [])
+
   const selectArtwork = useCallback(async (file: File) => {
     const request = ++lastRequest.current
     setError(null)
@@ -73,7 +82,7 @@ export function useArtwork() {
 
   const dismissError = useCallback(() => setError(null), [])
 
-  return { artwork, error, isProcessing, selectArtwork, resetArtwork, dismissError }
+  return { artwork, error, isProcessing, selectArtwork, applyArtwork, resetArtwork, dismissError }
 }
 
 export type ArtworkController = ReturnType<typeof useArtwork>

@@ -104,7 +104,7 @@ export function writeStored(key: string, data: unknown) {
 }
 
 /** O modelo, se o valor for um id do catálogo, ou o reserva. */
-export function readModelId(value: unknown, fallback: ModelId): ModelId {
+export function readModelId<T>(value: unknown, fallback: T): ModelId | T {
   return MODEL_IDS.includes(value as ModelId) ? (value as ModelId) : fallback
 }
 
